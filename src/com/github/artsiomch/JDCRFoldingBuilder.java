@@ -12,7 +12,7 @@ import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jsoup.Jsoup;
+import org.jsoup.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
               descriptors.add( new JDCRFoldingDescriptor(
                       psiDocToken.getNode(),
                       textRange.shiftRight(psiDocToken.getTextOffset()),
-                      Jsoup.parse( textRange.substring( psiDocToken.getText())).text())
+                      Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true))
               ));
     });
     return descriptors.toArray(new FoldingDescriptor[0]);

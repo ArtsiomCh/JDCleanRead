@@ -1,7 +1,6 @@
 package com.github.artsiomch.utils;
 
 import com.intellij.openapi.util.TextRange;
-import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -10,8 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JDCRStringUtils {
-  @RegExp private static final String HTML_TAG = "<[^>]+>";
-  @RegExp private static final String HTML_ESC_CHAR = "&[^;]+;";
+  private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
+  private static final Pattern HTML_ESC_CHAR = Pattern.compile("&[^;]+;");
 
   /**
    * Parse giving text to find HTML tags
@@ -33,9 +32,9 @@ public class JDCRStringUtils {
     return getElementsInText(text, HTML_ESC_CHAR);
   }
 
-  private static List<TextRange> getElementsInText(String text, String elementRegex) {
+  @NotNull
+  private static List<TextRange> getElementsInText(String text, Pattern pattern) {
     List<TextRange> result = new ArrayList<>();
-    Pattern pattern = Pattern.compile( elementRegex);
     Matcher matcher = pattern.matcher(text);
     while (matcher.find()) {
       result.add( new TextRange( matcher.start(), matcher.end()));
