@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JDCRFoldingBuilder implements FoldingBuilder {
-  static final FoldingGroup FOLDING_GROUP = FoldingGroup.newGroup("jdcr");
 
   @NotNull
   @Override
@@ -27,27 +27,34 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
     PsiElement root = node.getPsi();
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
-    PsiTreeUtil.findChildrenOfType( root, PsiDocToken.class).forEach( psiDocToken -> {
-      JDCRStringUtils.getHtmlTags( psiDocToken.getText()).forEach( textRange ->
-              addFoldingDescriptor( psiDocToken, textRange, descriptors,
-                      "◊"
-              ));
-      JDCRStringUtils.getHtmlEscapedChars( psiDocToken.getText()).forEach( textRange ->
-              addFoldingDescriptor( psiDocToken, textRange, descriptors,
-                      Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
-              ));
+    PsiTreeUtil.findChildrenOfType( root, PsiDocComment.class).forEach( psiDocComment -> {
+      final FoldingGroup foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.toString());
+      PsiTreeUtil.findChildrenOfType( psiDocComment, PsiDocToken.class).forEach( psiDocToken -> {
+        JDCRStringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
+          String placeholderText = "◊";
+          if ( textRange.substring( psiDocToken.getText()).contains("<li>") ) placeholderText = " * ";
+          addFoldingDescriptor(psiDocToken, textRange, foldingGroup, descriptors,
+                  placeholderText
+          );
+        });
+        JDCRStringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
+                addFoldingDescriptor( psiDocToken, textRange, foldingGroup, descriptors,
+                        Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
+                ));
+      });
     });
     return descriptors.toArray(new FoldingDescriptor[0]);
   }
 
   private void addFoldingDescriptor(PsiDocToken psiDocToken,
                                     TextRange textRange,
+                                    final FoldingGroup foldingGroup,
                                     List<FoldingDescriptor> descriptors,
                                     String placeholderText) {
     descriptors.add( new NamedFoldingDescriptor(
             psiDocToken.getNode(),
             textRange.shiftRight( psiDocToken.getTextOffset()),
-            FOLDING_GROUP,
+            foldingGroup,
             placeholderText
     ));
   }
