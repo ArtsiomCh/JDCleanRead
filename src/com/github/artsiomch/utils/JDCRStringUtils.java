@@ -3,14 +3,18 @@ package com.github.artsiomch.utils;
 import com.intellij.openapi.util.TextRange;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class JDCRStringUtils {
   private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
   private static final Pattern HTML_ESC_CHAR = Pattern.compile("&[^;]+;");
+  private static final Pattern JD_TAG_CODE = Pattern.compile("(?i)\\{@code[^}]+}");
+  private static final Pattern JD_TAG_END = Pattern.compile("}");
 
   /**
    * Parse given text to find HTML tags
@@ -32,6 +36,20 @@ public class JDCRStringUtils {
     return getCombinedElementsInText(text, HTML_ESC_CHAR);
   }
 
+  @NotNull
+  public static List<TextRange> getCodeJDTags(String text) {
+    return getElementsInText(text, JD_TAG_CODE);
+  }
+
+  @NotNull
+  private static List<TextRange> getElementsInText(String text, Pattern pattern) {
+    List<TextRange> result = new ArrayList<>();
+    Matcher matcher = pattern.matcher( text);
+    while (matcher.find()) {
+      result.add( new TextRange( matcher.start(), matcher.end()));
+    }
+    return result;
+  }
   @NotNull
   private static List<TextRange> getCombinedElementsInText(String text, Pattern pattern) {
     Stack<TextRange> result = new Stack<>();

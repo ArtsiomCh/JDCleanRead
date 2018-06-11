@@ -8,9 +8,13 @@ import com.intellij.lang.folding.NamedFoldingDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiAnnotatedJavaCodeReferenceElement;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
 import com.intellij.psi.javadoc.PsiDocComment;
+import com.intellij.psi.javadoc.PsiDocTagValue;
 import com.intellij.psi.javadoc.PsiDocToken;
+import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,10 +33,11 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
 
     PsiTreeUtil.findChildrenOfType( root, PsiDocComment.class).forEach( psiDocComment -> {
       final FoldingGroup foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.toString());
+
       PsiTreeUtil.findChildrenOfType( psiDocComment, PsiDocToken.class).forEach( psiDocToken -> {
         JDCRStringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
-          String placeholderText = "◊";
-          if ( textRange.substring( psiDocToken.getText()).contains("<li>") ) placeholderText = " * ";
+          String placeholderText = "";//"◊";
+          if ( textRange.substring( psiDocToken.getText()).toLowerCase().contains("<li>") ) placeholderText = " - ";
           addFoldingDescriptor(psiDocToken, textRange, foldingGroup, descriptors,
                   placeholderText
           );
@@ -42,18 +47,39 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
                         Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
                 ));
       });
+
+      PsiTreeUtil.findChildrenOfType( psiDocComment, PsiInlineDocTag.class).forEach( psiInlineDocTag -> {
+        if (psiInlineDocTag.getName().equals("code")) {
+          TextRange textRangeTagStart = new TextRange( 0, 6);
+          TextRange textRangeTagEnd = new TextRange( psiInlineDocTag.getTextLength() - 1, psiInlineDocTag.getTextLength());
+          addFoldingDescriptor( psiInlineDocTag, textRangeTagStart, foldingGroup, descriptors, "");
+          addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd, foldingGroup, descriptors, "");
+        } else if (psiInlineDocTag.getName().equals("link")) {
+          PsiElement psiDocLink = psiInlineDocTag.getValueElement(); // PsiTreeUtil.findChildOfType( psiInlineDocTag, PsiDocMethodOrFieldRef.class);
+          if (psiDocLink==null) psiDocLink = PsiTreeUtil.findChildOfType( psiInlineDocTag, PsiAnnotatedJavaCodeReferenceElement.class);
+          if (psiDocLink!=null) {
+            TextRange textRangeTagStart = new TextRange( 0, 6);// psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextOffset());
+            TextRange textRangeTagEnd = new TextRange( //7
+                    psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextOffset() + psiDocLink.getTextLength(),
+                    psiInlineDocTag.getTextLength());
+            addFoldingDescriptor( psiInlineDocTag, textRangeTagStart, foldingGroup, descriptors, "");
+            addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd, foldingGroup, descriptors, "");
+          }
+        }
+      });
     });
+
     return descriptors.toArray(new FoldingDescriptor[0]);
   }
 
-  private void addFoldingDescriptor(PsiDocToken psiDocToken,
-                                    TextRange textRange,
+  private void addFoldingDescriptor(PsiElement element,
+                                    TextRange range,
                                     final FoldingGroup foldingGroup,
                                     List<FoldingDescriptor> descriptors,
                                     String placeholderText) {
     descriptors.add( new NamedFoldingDescriptor(
-            psiDocToken.getNode(),
-            textRange.shiftRight( psiDocToken.getTextOffset()),
+            element.getNode(),
+            range.shiftRight( element.getTextOffset()),
             foldingGroup,
             placeholderText
     ));
