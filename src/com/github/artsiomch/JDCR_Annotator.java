@@ -1,54 +1,58 @@
 package com.github.artsiomch;
 
-import com.github.artsiomch.utils.JDCRStringUtils;
+import com.github.artsiomch.utils.JDCR_StringUtils;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.openapi.editor.colors.TextAttributesKey;
-import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.JavaDocTokenType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
-import org.intellij.lang.annotations.JdkConstants;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.*;
 
-public class JDCRAnnotator implements Annotator {
+public class JDCR_Annotator implements Annotator {
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
     //TODO activate only if Folding enebled
     if (element instanceof PsiDocToken) {
       getTextRangesForHtmlTag( "<b>", "</b>",  element).forEach( textRange -> {
-        TextAttributes textAttributes = createTextAttributes( DOC_COMMENT);
+        TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
         /** See {@link java.awt.Font} Set or revert FontType*/
         textAttributes.setFontType( textAttributes.getFontType() ^ Font.BOLD);
         holder.createInfoAnnotation( textRange, null)
                 .setEnforcedTextAttributes( textAttributes);
       });
-      getTextRangesForHtmlTag( "<code>", "</code>",  element).forEach( textRange -> {
-        TextAttributes textAttributes = createTextAttributes( DOC_COMMENT_MARKUP);
-//      textAttributes.setEffectType( EffectType.WAVE_UNDERSCORE);
-        holder.createInfoAnnotation( textRange, null)
-                .setEnforcedTextAttributes( textAttributes);
-      });
+      getTextRangesForHtmlTag( "<code>", "</code>",  element).forEach( textRange ->
+              holder.createInfoAnnotation( textRange, null)
+                      .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
       getTextRangesForHtmlTag( "<tt>", "</tt>",  element).forEach( textRange ->
               holder.createInfoAnnotation( textRange, null)
-                      .setEnforcedTextAttributes( createTextAttributes( DOC_COMMENT_MARKUP)));
+                      .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
 //    getTextRangesForHtmlTag( "<i>", "</i>", Font.ITALIC, DOC_COMMENT, element, holder);
 
     } else if (element instanceof PsiInlineDocTag && ((PsiInlineDocTag) element).getName().equals("code")) {
-      TextAttributes textAttributes = createTextAttributes(DOC_COMMENT_MARKUP);
-      holder.createInfoAnnotation( element, null).setEnforcedTextAttributes( textAttributes);
+      // fixme: If that func style really better?! :-/
+      Optional<PsiElement> dataElement = Arrays.stream(((PsiInlineDocTag) element).getDataElements())
+              .filter( it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
+              .findFirst();
+      dataElement.ifPresent(psiElement ->
+              holder.createInfoAnnotation(new TextRange(psiElement.getTextOffset(), element.getTextRange().getEndOffset() - 1), null)
+              .setTextAttributes(JDCR_ColorSettingsPage.CODE_TAG));
+
     } else if (element instanceof PsiDocMethodOrFieldRef ) { // @link
-      TextAttributes textAttributes = createTextAttributes(CLASS_NAME);
-      holder.createInfoAnnotation( element, null).setEnforcedTextAttributes( textAttributes);
+      holder.createInfoAnnotation( new TextRange( element.getTextOffset(), element.getTextRange().getEndOffset()), null)
+              .setTextAttributes( JDCR_ColorSettingsPage.LINK_TAG);
+
     }
   }
 
@@ -58,7 +62,7 @@ public class JDCRAnnotator implements Annotator {
     List<TextRange> result = new ArrayList<>();
     int pos = element.getTextRange().getStartOffset();
     int start = -2, end = -2;
-    for (TextRange textRange : JDCRStringUtils.getCombinedHtmlTags(element.getText())) {
+    for (TextRange textRange : JDCR_StringUtils.getCombinedHtmlTags(element.getText())) {
       if (textRange.substring(element.getText()).contains( openTag)) {
         start = textRange.getEndOffset();
       }
@@ -73,10 +77,6 @@ public class JDCRAnnotator implements Annotator {
       }
     }
     return result;
-  }
-
-  private TextAttributes createTextAttributes (TextAttributesKey baseTextAttributesKey) {
-    return baseTextAttributesKey.getDefaultAttributes().clone();
   }
 
 }

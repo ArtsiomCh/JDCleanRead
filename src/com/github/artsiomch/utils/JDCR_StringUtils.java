@@ -8,13 +8,10 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-public class JDCRStringUtils {
+public class JDCR_StringUtils {
   private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
   private static final Pattern HTML_ESC_CHAR = Pattern.compile("&[^;]+;");
-  private static final Pattern JD_TAG_CODE = Pattern.compile("(?i)\\{@code[^}]+}");
-  private static final Pattern JD_TAG_END = Pattern.compile("}");
 
   /**
    * Parse given text to find HTML tags
@@ -34,11 +31,6 @@ public class JDCRStringUtils {
   @NotNull
   public static List<TextRange> getCombinedHtmlEscapedChars(String text) {
     return getCombinedElementsInText(text, HTML_ESC_CHAR);
-  }
-
-  @NotNull
-  public static List<TextRange> getCodeJDTags(String text) {
-    return getElementsInText(text, JD_TAG_CODE);
   }
 
   @NotNull

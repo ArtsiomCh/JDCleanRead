@@ -1,6 +1,6 @@
 package com.github.artsiomch;
 
-import com.github.artsiomch.utils.JDCRStringUtils;
+import com.github.artsiomch.utils.JDCR_StringUtils;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilder;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -10,9 +10,7 @@ import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotatedJavaCodeReferenceElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
 import com.intellij.psi.javadoc.PsiDocComment;
-import com.intellij.psi.javadoc.PsiDocTagValue;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -23,7 +21,7 @@ import org.jsoup.parser.Parser;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JDCRFoldingBuilder implements FoldingBuilder {
+public class JDCR_FoldingBuilder implements FoldingBuilder {
 
   @NotNull
   @Override
@@ -32,17 +30,17 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
     PsiTreeUtil.findChildrenOfType( root, PsiDocComment.class).forEach( psiDocComment -> {
-      final FoldingGroup foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.toString());
+      final FoldingGroup foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
       PsiTreeUtil.findChildrenOfType( psiDocComment, PsiDocToken.class).forEach( psiDocToken -> {
-        JDCRStringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
+        JDCR_StringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
           String placeholderText = "";//"◊";
           if ( textRange.substring( psiDocToken.getText()).toLowerCase().contains("<li>") ) placeholderText = " - ";
           addFoldingDescriptor(psiDocToken, textRange, foldingGroup, descriptors,
                   placeholderText
           );
         });
-        JDCRStringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
+        JDCR_StringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
                 addFoldingDescriptor( psiDocToken, textRange, foldingGroup, descriptors,
                         Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
                 ));
@@ -60,7 +58,7 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
           if (psiDocLink!=null) {
             TextRange textRangeTagStart = new TextRange( 0, 6);// psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextOffset());
             TextRange textRangeTagEnd = new TextRange( //7
-                    psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextOffset() + psiDocLink.getTextLength(),
+                    psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextRange().getStartOffset() + psiDocLink.getTextLength(),
                     psiInlineDocTag.getTextLength());
             addFoldingDescriptor( psiInlineDocTag, textRangeTagStart, foldingGroup, descriptors, "");
             addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd, foldingGroup, descriptors, "");
@@ -79,7 +77,7 @@ public class JDCRFoldingBuilder implements FoldingBuilder {
                                     String placeholderText) {
     descriptors.add( new NamedFoldingDescriptor(
             element.getNode(),
-            range.shiftRight( element.getTextOffset()),
+            range.shiftRight( element.getTextRange().getStartOffset()),
             foldingGroup,
             placeholderText
     ));
