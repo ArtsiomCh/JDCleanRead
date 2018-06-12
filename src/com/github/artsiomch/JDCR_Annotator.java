@@ -21,24 +21,31 @@ import java.util.Optional;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.*;
 
 public class JDCR_Annotator implements Annotator {
+  private List<TextRange> htmlTags;
+
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
     //TODO activate only if Folding enebled
     if (element instanceof PsiDocToken) {
-      getTextRangesForHtmlTag( "<b>", "</b>",  element).forEach( textRange -> {
+      htmlTags = JDCR_StringUtils.getCombinedHtmlTags(element.getText());
+      if (htmlTags.isEmpty()) return;
+
+      getTextRangesForHtmlTags( Arrays.asList(
+              new Tag("<b>", "</b>"),
+              new Tag("<i>", "</i>")), element)
+              .forEach( textRange -> {
         TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
         /** See {@link java.awt.Font} Set or revert FontType*/
         textAttributes.setFontType( textAttributes.getFontType() ^ Font.BOLD);
         holder.createInfoAnnotation( textRange, null)
                 .setEnforcedTextAttributes( textAttributes);
       });
-      getTextRangesForHtmlTag( "<code>", "</code>",  element).forEach( textRange ->
-              holder.createInfoAnnotation( textRange, null)
-                      .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
-      getTextRangesForHtmlTag( "<tt>", "</tt>",  element).forEach( textRange ->
-              holder.createInfoAnnotation( textRange, null)
-                      .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
-//    getTextRangesForHtmlTag( "<i>", "</i>", Font.ITALIC, DOC_COMMENT, element, holder);
+      getTextRangesForHtmlTags( Arrays.asList(
+              new Tag("<code>", "</code>"),
+              new Tag("<tt>", "</tt>")), element)
+              .forEach( textRange ->
+                      holder.createInfoAnnotation( textRange, null)
+                              .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
 
     } else if (element instanceof PsiInlineDocTag && ((PsiInlineDocTag) element).getName().equals("code")) {
       // fixme: If that func style really better?! :-/
@@ -56,27 +63,40 @@ public class JDCR_Annotator implements Annotator {
     }
   }
 
-  private List<TextRange> getTextRangesForHtmlTag(@NotNull String openTag,
-                                                  @NotNull String closeTag,
-                                                  @NotNull PsiElement element) {
+  private List<TextRange> getTextRangesForHtmlTags(@NotNull List<Tag> tags,
+                                                   @NotNull PsiElement element) {
     List<TextRange> result = new ArrayList<>();
     int pos = element.getTextRange().getStartOffset();
     int start = -2, end = -2;
-    for (TextRange textRange : JDCR_StringUtils.getCombinedHtmlTags(element.getText())) {
-      if (textRange.substring(element.getText()).contains( openTag)) {
-        start = textRange.getEndOffset();
-      }
-      if (textRange.substring(element.getText()).contains( closeTag)) {
-        end = textRange.getStartOffset();
-      }
-      if (start != -2 && end != -2 && start < end) {
+    for (Tag tag : tags) {
+      for (TextRange textRange : htmlTags) {
+        if (textRange.substring(element.getText()).contains( tag.open)) {
+          start = textRange.getEndOffset();
+        }
+        if (textRange.substring(element.getText()).contains( tag.close)) {
+          end = textRange.getStartOffset();
+        }
+        if (start != -2 && end != -2 && start < end) {
 //        assert start <= end : "Start="+start+" End="+end+" at: "+element.getText();
-        result.add( new TextRange(pos + start, pos + end));
-        start = -2;
-        end = -2;
+          TextRange newTextRange = new TextRange(pos + start, pos + end);
+          // exclude dublicates
+          if (result.stream().noneMatch( it -> it.contains( newTextRange)))
+            result.add( newTextRange);
+          start = -2;
+          end = -2;
+        }
       }
     }
     return result;
+  }
+
+  private class Tag {
+    public Tag (@NotNull String openTag, @NotNull String closeTag){
+      this.open = openTag;
+      this.close = closeTag;
+    }
+    @NotNull String open;
+    @NotNull String close;
   }
 
 }

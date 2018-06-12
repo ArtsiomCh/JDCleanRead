@@ -23,25 +23,27 @@ import java.util.List;
 
 public class JDCR_FoldingBuilder implements FoldingBuilder {
 
+  private List<FoldingDescriptor> foldingDescriptors;
+  private FoldingGroup foldingGroup;
+
   @NotNull
   @Override
   public FoldingDescriptor[] buildFoldRegions(@NotNull ASTNode node, @NotNull Document document) {
     PsiElement root = node.getPsi();
-    List<FoldingDescriptor> descriptors = new ArrayList<>();
+    foldingDescriptors = new ArrayList<>();
 
     PsiTreeUtil.findChildrenOfType( root, PsiDocComment.class).forEach( psiDocComment -> {
-      final FoldingGroup foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
+      foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
       PsiTreeUtil.findChildrenOfType( psiDocComment, PsiDocToken.class).forEach( psiDocToken -> {
         JDCR_StringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
-          String placeholderText = "";//"◊";
-          if ( textRange.substring( psiDocToken.getText()).toLowerCase().contains("<li>") ) placeholderText = " - ";
-          addFoldingDescriptor(psiDocToken, textRange, foldingGroup, descriptors,
-                  placeholderText
-          );
+          if ( textRange.substring( psiDocToken.getText()).toLowerCase().contains("<li>") )
+            addFoldingDescriptor(psiDocToken, textRange, " - ");
+          else
+            addFoldingDescriptor(psiDocToken, textRange);
         });
         JDCR_StringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
-                addFoldingDescriptor( psiDocToken, textRange, foldingGroup, descriptors,
+                addFoldingDescriptor( psiDocToken, textRange,
                         Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
                 ));
       });
@@ -50,8 +52,8 @@ public class JDCR_FoldingBuilder implements FoldingBuilder {
         if (psiInlineDocTag.getName().equals("code")) {
           TextRange textRangeTagStart = new TextRange( 0, 6);
           TextRange textRangeTagEnd = new TextRange( psiInlineDocTag.getTextLength() - 1, psiInlineDocTag.getTextLength());
-          addFoldingDescriptor( psiInlineDocTag, textRangeTagStart, foldingGroup, descriptors, "");
-          addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd, foldingGroup, descriptors, "");
+          addFoldingDescriptor( psiInlineDocTag, textRangeTagStart);
+          addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd);
         } else if (psiInlineDocTag.getName().equals("link")) {
           PsiElement psiDocLink = psiInlineDocTag.getValueElement(); // PsiTreeUtil.findChildOfType( psiInlineDocTag, PsiDocMethodOrFieldRef.class);
           if (psiDocLink==null) psiDocLink = PsiTreeUtil.findChildOfType( psiInlineDocTag, PsiAnnotatedJavaCodeReferenceElement.class);
@@ -60,22 +62,21 @@ public class JDCR_FoldingBuilder implements FoldingBuilder {
             TextRange textRangeTagEnd = new TextRange( //7
                     psiDocLink.getTextRange().getStartOffset() - psiInlineDocTag.getTextRange().getStartOffset() + psiDocLink.getTextLength(),
                     psiInlineDocTag.getTextLength());
-            addFoldingDescriptor( psiInlineDocTag, textRangeTagStart, foldingGroup, descriptors, "");
-            addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd, foldingGroup, descriptors, "");
+            addFoldingDescriptor( psiInlineDocTag, textRangeTagStart);
+            addFoldingDescriptor( psiInlineDocTag, textRangeTagEnd);
           }
         }
       });
     });
 
-    return descriptors.toArray(new FoldingDescriptor[0]);
+    return foldingDescriptors.toArray(new FoldingDescriptor[0]);
   }
 
-  private void addFoldingDescriptor(PsiElement element,
-                                    TextRange range,
-                                    final FoldingGroup foldingGroup,
-                                    List<FoldingDescriptor> descriptors,
-                                    String placeholderText) {
-    descriptors.add( new NamedFoldingDescriptor(
+  private void addFoldingDescriptor(PsiElement element, TextRange range) {
+    addFoldingDescriptor( element, range, ""); //"◊"
+  }
+  private void addFoldingDescriptor(PsiElement element, TextRange range, String placeholderText) {
+    foldingDescriptors.add( new NamedFoldingDescriptor(
             element.getNode(),
             range.shiftRight( element.getTextRange().getStartOffset()),
             foldingGroup,
