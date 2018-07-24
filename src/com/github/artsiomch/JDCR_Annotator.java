@@ -16,74 +16,115 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.*;
 
 public class JDCR_Annotator implements Annotator {
-  private List<TextRange> htmlTags;
 
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-    //TODO activate only if Folding enebled
+    //TODO activate only if Folding enabled
     if (element instanceof PsiDocToken) {
-      htmlTags = JDCR_StringUtils.getCombinedHtmlTags(element.getText());
-      if (htmlTags.isEmpty()) return;
-
-      getTextRangesForHtmlTags( Arrays.asList(
-              new Tag("<b>", "</b>"),
-              new Tag("<i>", "</i>")), element)
-              .forEach( textRange -> {
-        TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
-        /** See {@link java.awt.Font} Set or revert FontType*/
-        textAttributes.setFontType( textAttributes.getFontType() ^ Font.BOLD);
-        holder.createInfoAnnotation( textRange, null)
-                .setEnforcedTextAttributes( textAttributes);
-      });
-      getTextRangesForHtmlTags( Arrays.asList(
-              new Tag("<code>", "</code>"),
-              new Tag("<tt>", "</tt>")), element)
-              .forEach( textRange ->
-                      holder.createInfoAnnotation( textRange, null)
-                              .setTextAttributes( JDCR_ColorSettingsPage.CODE_TAG));
-
-    } else if (element instanceof PsiInlineDocTag && ((PsiInlineDocTag) element).getName().equals("code")) {
-      // fixme: If that func style really better?! :-/
-      Optional<PsiElement> dataElement = Arrays.stream(((PsiInlineDocTag) element).getDataElements())
-              .filter( it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
-              .findFirst();
-      dataElement.ifPresent(psiElement ->
-              holder.createInfoAnnotation(new TextRange(psiElement.getTextOffset(), element.getTextRange().getEndOffset() - 1), null)
-              .setTextAttributes(JDCR_ColorSettingsPage.CODE_TAG));
-
-    } else if (element instanceof PsiDocMethodOrFieldRef ) { // @link
-      holder.createInfoAnnotation( new TextRange( element.getTextOffset(), element.getTextRange().getEndOffset()), null)
-              .setTextAttributes( JDCR_ColorSettingsPage.LINK_TAG);
-
+      List<TextRange> foundHtmlTags = JDCR_StringUtils.getCombinedHtmlTags(element.getText());
+      if (foundHtmlTags.isEmpty()) {
+        return;
+      }
+      annotateFontStyleTags(element, holder, foundHtmlTags);
+      annotateCodeTags(element, holder, foundHtmlTags);
+    } else if (element instanceof PsiInlineDocTag && ((PsiInlineDocTag) element).getName()
+        .equals("code")) {
+      annotateCodeAnnotations(element, holder);
+    } else if (element instanceof PsiDocMethodOrFieldRef) { // @link
+      annotateLinkAnnotations(element, holder);
     }
   }
 
-  private List<TextRange> getTextRangesForHtmlTags(@NotNull List<Tag> tags,
-                                                   @NotNull PsiElement element) {
+  private void annotateLinkAnnotations(
+      @NotNull PsiElement element,
+      @NotNull AnnotationHolder holder) {
+    holder.createInfoAnnotation(
+        new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()), null)
+        .setTextAttributes(JDCR_ColorSettingsPage.LINK_TAG);
+  }
+
+  private void annotateCodeAnnotations(
+      @NotNull PsiElement element,
+      @NotNull AnnotationHolder holder) {
+    Arrays.stream(((PsiInlineDocTag) element).getDataElements())
+        .filter(it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
+        .findFirst()
+        .ifPresent(psiElement -> {
+          TextRange annotatedTextRange = new TextRange(psiElement.getTextOffset(),
+              element.getTextRange().getEndOffset() - 1);
+          holder.createInfoAnnotation(annotatedTextRange, null)
+              .setTextAttributes(JDCR_ColorSettingsPage.CODE_TAG);
+        });
+  }
+
+  private void annotateCodeTags(
+      @NotNull PsiElement element,
+      @NotNull AnnotationHolder holder,
+      List<TextRange> foundHtmlTags) {
+    List<Tag> tagsToAnnotate;
+    tagsToAnnotate = Arrays.asList(
+        new Tag("<code>", "</code>"),
+        new Tag("<tt>", "</tt>"));
+    annotateAllTagsWithTextAttributes(element, holder, foundHtmlTags, tagsToAnnotate,
+        JDCR_ColorSettingsPage.CODE_TAG.getDefaultAttributes());
+  }
+
+  private void annotateFontStyleTags(
+      @NotNull PsiElement element,
+      @NotNull AnnotationHolder holder,
+      List<TextRange> foundHtmlTags) {
+    List<Tag> tagsToAnnotate = Arrays.asList(
+        new Tag("<b>", "</b>"),
+        new Tag("<i>", "</i>"));
+    TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
+    /** See {@link Font} Set or revert FontType*/
+    textAttributes.setFontType(textAttributes.getFontType() ^ Font.BOLD);
+    annotateAllTagsWithTextAttributes(element, holder, foundHtmlTags, tagsToAnnotate,
+        textAttributes);
+  }
+
+  private void annotateAllTagsWithTextAttributes(
+      @NotNull PsiElement element,
+      @NotNull AnnotationHolder holder,
+      List<TextRange> foundHtmlTags,
+      List<Tag> tagsToAnnotate,
+      TextAttributes textAttributes) {
+    for (TextRange textRange : getTextRangesForHtmlTags(tagsToAnnotate, foundHtmlTags, element)) {
+      holder.createInfoAnnotation(textRange, null)
+          .setEnforcedTextAttributes(textAttributes);
+    }
+  }
+
+  private static final int EMPTY_INDEX = -2;
+
+  private List<TextRange> getTextRangesForHtmlTags(
+      @NotNull List<Tag> tagsToAnnotate,
+      @NotNull List<TextRange> htmlTagsRanges,
+      @NotNull PsiElement element) {
     List<TextRange> result = new ArrayList<>();
     int pos = element.getTextRange().getStartOffset();
-    int start = -2, end = -2;
-    for (Tag tag : tags) {
-      for (TextRange textRange : htmlTags) {
-        if (textRange.substring(element.getText()).contains( tag.open)) {
+    int start = EMPTY_INDEX, end = EMPTY_INDEX;
+    for (Tag tag : tagsToAnnotate) {
+      for (TextRange textRange : htmlTagsRanges) {
+        if (textRange.substring(element.getText()).contains(tag.open)) {
           start = textRange.getEndOffset();
         }
-        if (textRange.substring(element.getText()).contains( tag.close)) {
+        if (textRange.substring(element.getText()).contains(tag.close)) {
           end = textRange.getStartOffset();
         }
-        if (start != -2 && end != -2 && start < end) {
+        if (start != EMPTY_INDEX && end != EMPTY_INDEX && start < end) {
 //        assert start <= end : "Start="+start+" End="+end+" at: "+element.getText();
           TextRange newTextRange = new TextRange(pos + start, pos + end);
           // exclude dublicates
-          if (result.stream().noneMatch( it -> it.contains( newTextRange)))
-            result.add( newTextRange);
-          start = -2;
-          end = -2;
+          if (result.stream().noneMatch(it -> it.contains(newTextRange))) {
+            result.add(newTextRange);
+          }
+          start = EMPTY_INDEX;
+          end = EMPTY_INDEX;
         }
       }
     }
@@ -91,12 +132,16 @@ public class JDCR_Annotator implements Annotator {
   }
 
   private class Tag {
-    public Tag (@NotNull String openTag, @NotNull String closeTag){
+
+    public Tag(@NotNull String openTag, @NotNull String closeTag) {
       this.open = openTag;
       this.close = closeTag;
     }
-    @NotNull String open;
-    @NotNull String close;
+
+    @NotNull
+    String open;
+    @NotNull
+    String close;
   }
 
 }
