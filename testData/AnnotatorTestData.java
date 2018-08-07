@@ -7,6 +7,6 @@
  * {@link #<info descr="null">link_tag</info> link_name}
  */
 
-public class testAnnotatorTags {
+public class AnnotatorTestData {
 
 }

@@ -8,8 +8,12 @@ public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
   }
 
   public void testAnnotatorTagsHighlighting() {
-    myFixture.configureByFiles("testAnnotatorTags.java");
+    myFixture.configureByFiles("AnnotatorTestData.java");
     myFixture.checkHighlighting(false, true, false, false);
   }
 
+  public void testFolding() {
+//    myFixture.configureByFiles("FoldingTestData.java");
+    myFixture.testFolding(getTestDataPath() + "/FoldingTestData.java");
+  }
 }
