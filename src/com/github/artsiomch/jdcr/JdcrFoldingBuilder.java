@@ -1,6 +1,6 @@
-package com.github.artsiomch;
+package com.github.artsiomch.jdcr;
 
-import com.github.artsiomch.utils.JDCR_StringUtils;
+import com.github.artsiomch.jdcr.utils.JdcrStringUtils;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilder;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -21,7 +21,7 @@ import org.jsoup.parser.Parser;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JDCR_FoldingBuilder implements FoldingBuilder {
+public class JdcrFoldingBuilder implements FoldingBuilder {
 
   private List<FoldingDescriptor> foldingDescriptors;
   private FoldingGroup foldingGroup;
@@ -36,13 +36,13 @@ public class JDCR_FoldingBuilder implements FoldingBuilder {
       foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
       PsiTreeUtil.findChildrenOfType( psiDocComment, PsiDocToken.class).forEach( psiDocToken -> {
-        JDCR_StringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
+        JdcrStringUtils.getCombinedHtmlTags( psiDocToken.getText()).forEach(textRange -> {
           if ( textRange.substring( psiDocToken.getText()).toLowerCase().contains("<li>") )
             addFoldingDescriptor(psiDocToken, textRange, " - ");
           else
             addFoldingDescriptor(psiDocToken, textRange);
         });
-        JDCR_StringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
+        JdcrStringUtils.getCombinedHtmlEscapedChars( psiDocToken.getText()).forEach(textRange ->
                 addFoldingDescriptor( psiDocToken, textRange,
                         Parser.unescapeEntities( textRange.substring( psiDocToken.getText()), true)
                 ));

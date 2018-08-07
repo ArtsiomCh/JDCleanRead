@@ -1,4 +1,4 @@
-package com.github.artsiomch;
+package com.github.artsiomch.jdcr;
 
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.lang.java.JavaSyntaxHighlighterFactory;
@@ -16,7 +16,7 @@ import javax.swing.*;
 import java.util.Arrays;
 import java.util.Map;
 
-public class JDCR_ColorSettingsPage implements ColorSettingsPage {
+public class JdcrColorSettingsPage implements ColorSettingsPage {
   public static final TextAttributesKey CODE_TAG = TextAttributesKey.createTextAttributesKey(
           "code tag", DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
   public static final TextAttributesKey LINK_TAG = TextAttributesKey.createTextAttributesKey(

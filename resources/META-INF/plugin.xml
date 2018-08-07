@@ -32,9 +32,9 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <lang.foldingBuilder language="JAVA" implementationClass="com.github.artsiomch.JDCR_FoldingBuilder"/>
-    <annotator language="JAVA" implementationClass="com.github.artsiomch.JDCR_Annotator"/>
-    <colorSettingsPage implementation="com.github.artsiomch.JDCR_ColorSettingsPage" />
+    <lang.foldingBuilder language="JAVA" implementationClass="com.github.artsiomch.jdcr.JdcrFoldingBuilder"/>
+    <annotator language="JAVA" implementationClass="com.github.artsiomch.jdcr.JdcrAnnotator"/>
+    <colorSettingsPage implementation="com.github.artsiomch.jdcr.JdcrColorSettingsPage" />
   </extensions>
 
   <actions>
