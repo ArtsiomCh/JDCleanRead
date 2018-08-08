@@ -24,7 +24,7 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
 
   private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
           new AttributesDescriptor("Tag value of: <code> | <tt> | @code", CODE_TAG),
-          new AttributesDescriptor("Tag value of: @inline", LINK_TAG)
+          new AttributesDescriptor("Tag value of: @link", LINK_TAG)
   };
 
   @Nullable

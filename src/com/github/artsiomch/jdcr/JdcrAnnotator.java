@@ -20,7 +20,6 @@ import java.util.List;
 import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.*;
 
 public class JdcrAnnotator implements Annotator {
-  private PsiElement element;
   private AnnotationHolder holder;
 
   private static final List<Tag> CODE_TAGS =
@@ -33,7 +32,7 @@ public class JdcrAnnotator implements Annotator {
   // fixme
   private static TextAttributes setFontStyleTextAttributes() {
     TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
-    /** See {@link Font} Set or revert FontType */
+    /** Set or revert FontType. See {@link Font} */
     textAttributes.setFontType(textAttributes.getFontType() ^ Font.BOLD);
     return textAttributes;
   }
@@ -41,31 +40,32 @@ public class JdcrAnnotator implements Annotator {
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
     // TODO activate only if Folding enabled
-    this.element = element;
     this.holder = holder;
     if (element instanceof PsiDocToken) {
       // Annotate Font style HTML tags
-      annotateAllTagsWithTextAttributes(FONT_STYLE_TAGS, FONT_STYLE_TEXT_ATTRIBUTES);
+      annotateAllTagsWithTextAttributes(
+          (PsiDocToken) element, FONT_STYLE_TAGS, FONT_STYLE_TEXT_ATTRIBUTES);
       // Annotate Code HTML tags
       annotateAllTagsWithTextAttributes(
-          CODE_TAGS, JdcrColorSettingsPage.CODE_TAG.getDefaultAttributes());
+          (PsiDocToken) element, CODE_TAGS, JdcrColorSettingsPage.CODE_TAG.getDefaultAttributes());
     } else if (element instanceof PsiInlineDocTag
         && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
-      annotateCodeAnnotations();
+      annotateCodeAnnotations((PsiInlineDocTag) element);
     } else if (element instanceof PsiDocMethodOrFieldRef) { // @link
-      annotateLinkAnnotations();
+      annotateLinkAnnotations((PsiDocMethodOrFieldRef) element);
     }
+    this.holder = null;
   }
 
-  private void annotateLinkAnnotations() {
+  private void annotateLinkAnnotations(@NotNull PsiDocMethodOrFieldRef element) {
     holder
         .createInfoAnnotation(
             new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()), null)
         .setTextAttributes(JdcrColorSettingsPage.LINK_TAG);
   }
 
-  private void annotateCodeAnnotations() {
-    Arrays.stream(((PsiInlineDocTag) element).getDataElements())
+  private void annotateCodeAnnotations(@NotNull PsiInlineDocTag element) {
+    Arrays.stream(element.getDataElements())
         .filter(it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
         .findFirst()
         .ifPresent(
@@ -79,7 +79,7 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateAllTagsWithTextAttributes(
-      List<Tag> tagsToAnnotate, TextAttributes textAttributes) {
+      @NotNull PsiDocToken element, List<Tag> tagsToAnnotate, TextAttributes textAttributes) {
     for (TextRange textRange :
         JdcrStringUtils.getTextRangesForHtmlTags(element.getText(), tagsToAnnotate)) {
       holder
