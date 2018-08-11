@@ -12,8 +12,27 @@ public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
     myFixture.checkHighlighting(false, true, false, false);
   }
 
-  public void testFolding() {
-//    myFixture.configureByFiles("FoldingTestData.java");
-    myFixture.testFolding(getTestDataPath() + "/FoldingTestData.java");
+  public void testFoldingHtmlTags() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingHtmlTagsTestData.java");
+  }
+
+  public void testFoldingCodeTag() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingCodeTagTestData.java");
+  }
+
+  public void testFoldingLinkTag() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingLinkTagTestData.java");
+  }
+
+  public void testFoldingLinkMultilineAfterTag() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingLinkMultilineAfterTagTestData.java");
+  }
+
+  public void testFoldingLinkMultilineBeforeTag() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingLinkMultilineBeforeTagTestData.java");
+  }
+
+  public void testFoldingEscapedChars() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingEscapedCharsTestData.java");
   }
 }
