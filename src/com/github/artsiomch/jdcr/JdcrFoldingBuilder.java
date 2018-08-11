@@ -75,6 +75,10 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
   private void checkHtmlTagsAndEscapedChars(PsiDocToken psiDocToken) {
+    if (psiDocToken.getParent() instanceof PsiInlineDocTag
+        && ((PsiInlineDocTag) psiDocToken.getParent()).getName().equals("code"))
+      //PsiDocToken inside @code tag -> do not interpreting the text as HTML markup
+      return;
     JdcrStringUtils.getCombinedHtmlTags(psiDocToken.getText())
         .forEach(
             textRange -> {
