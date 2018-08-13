@@ -24,27 +24,6 @@ public class JdcrStringUtils {
     return getCombinedElementsInText(text, HTML_TAG);
   }
 
-  /**
-   * Parse given text to find HTML escaped chars, such as "&nbsp"
-   *
-   * @param text given text
-   * @return list of TextRange of HTML escaped chars inside text
-   */
-  @NotNull
-  public static List<TextRange> getCombinedHtmlEscapedChars(String text) {
-    return getCombinedElementsInText(text, HTML_ESC_CHAR);
-  }
-
-  @NotNull
-  private static List<TextRange> getElementsInText(String text, Pattern pattern) {
-    List<TextRange> result = new ArrayList<>();
-    Matcher matcher = pattern.matcher(text);
-    while (matcher.find()) {
-      result.add(new TextRange(matcher.start(), matcher.end()));
-    }
-    return result;
-  }
-
   @NotNull
   private static List<TextRange> getCombinedElementsInText(String text, Pattern pattern) {
     Stack<TextRange> result = new Stack<>();
@@ -56,6 +35,27 @@ public class JdcrStringUtils {
               ? result.pop().getStartOffset()
               : matcher.start();
       result.push(new TextRange(start, matcher.end()));
+    }
+    return result;
+  }
+
+  /**
+   * Parse given text to find HTML escaped chars, such as "&nbsp"
+   *
+   * @param text given text
+   * @return list of TextRange of HTML escaped chars inside text
+   */
+  @NotNull
+  public static List<TextRange> getHtmlEscapedChars(String text) {
+    return getElementsInText(text, HTML_ESC_CHAR);
+  }
+
+  @NotNull
+  private static List<TextRange> getElementsInText(String text, Pattern pattern) {
+    List<TextRange> result = new ArrayList<>();
+    Matcher matcher = pattern.matcher(text);
+    while (matcher.find()) {
+      result.add(new TextRange(matcher.start(), matcher.end()));
     }
     return result;
   }

@@ -88,7 +88,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
                 addFoldingDescriptor(psiDocToken, textRange);
               }
             });
-    JdcrStringUtils.getCombinedHtmlEscapedChars(psiDocToken.getText())
+    JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())
         .forEach(
             textRange ->
                 addFoldingDescriptor(
