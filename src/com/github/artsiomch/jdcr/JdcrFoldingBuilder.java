@@ -13,10 +13,12 @@ import com.intellij.psi.PsiAnnotatedJavaCodeReferenceElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
+import com.intellij.psi.impl.source.tree.JavaDocElementType;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.Arrays;
 import java.util.LinkedList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,22 +58,27 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       foldJavaDocTagStartEnd(psiInlineDocTag);
 
       // Folding label part of @link tag
-      PsiElement linkToShow =
-          PsiTreeUtil.findChildOfAnyType(
-              psiInlineDocTag,
-              PsiDocMethodOrFieldRef.class, // link through # within current file
-              PsiAnnotatedJavaCodeReferenceElement.class); // link to outer file
-      if (linkToShow != null
-          // @link tag has text label part to fold
-          && linkToShow.getNextSibling() != psiInlineDocTag.getLastChild()) {
-        TextRange labelToFold =
-            new TextRange(
-                linkToShow.getTextRange().getEndOffset()
-                    - psiInlineDocTag.getTextRange().getStartOffset(),
-                psiInlineDocTag.getTextLength() - 1);
-        getRangesToFold(psiInlineDocTag, labelToFold)
-            .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range));
-      }
+      Arrays.stream(psiInlineDocTag.getChildren())
+          .filter(
+              child ->
+                  // link through # within current file
+                  (child.getNode().getElementType() == JavaDocElementType.DOC_METHOD_OR_FIELD_REF
+                          // link to outer file
+                          || child.getNode().getElementType()
+                              == JavaDocElementType.DOC_REFERENCE_HOLDER)
+                      // @link tag has text label part to fold
+                      && child.getNextSibling() != psiInlineDocTag.getLastChild())
+          .findFirst()
+          .map(
+              linkToShow ->
+                  new TextRange(
+                      linkToShow.getTextRange().getEndOffset()
+                          - psiInlineDocTag.getTextRange().getStartOffset(),
+                      psiInlineDocTag.getTextLength() - 1))
+          .ifPresent(
+              labelToFold ->
+                  getRangesToFold(psiInlineDocTag, labelToFold)
+                      .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range)));
     }
   }
 
@@ -106,7 +113,9 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
         prevLineBreak = ws.getNextSibling().getStartOffsetInParent() + 1;
       }
     }
-    result.add(new TextRange(prevLineBreak, range.getEndOffset()));
+    if (prevLineBreak < range.getEndOffset()) {
+      result.add(new TextRange(prevLineBreak, range.getEndOffset()));
+    }
     return result;
   }
 

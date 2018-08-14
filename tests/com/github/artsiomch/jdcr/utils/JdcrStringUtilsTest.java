@@ -45,11 +45,13 @@ public class JdcrStringUtilsTest {
     assertEquals(text, combinedHtmlEscapedChars.get(0).getStartOffset(), 0);
     assertEquals(text, combinedHtmlEscapedChars.get(0).getEndOffset(), 5);
 
-    text = "&lt;&lt; combined HTML escaped chars test";
+    text = "&lt;&lt; two HTML escaped chars test";
     combinedHtmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
-    assertEquals(text, combinedHtmlEscapedChars.size(), 1);
-    assertEquals(text, combinedHtmlEscapedChars.get(0).getStartOffset(), 0);
-    assertEquals(text, combinedHtmlEscapedChars.get(0).getEndOffset(), 8);
+    assertEquals(text, 2, combinedHtmlEscapedChars.size());
+    assertEquals(text, 0, combinedHtmlEscapedChars.get(0).getStartOffset());
+    assertEquals(text, 4, combinedHtmlEscapedChars.get(0).getEndOffset());
+    assertEquals(text, 4, combinedHtmlEscapedChars.get(1).getStartOffset());
+    assertEquals(text, 8, combinedHtmlEscapedChars.get(1).getEndOffset());
   }
 
   @Test
