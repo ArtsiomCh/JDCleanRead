@@ -27,6 +27,12 @@ For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
 Plugin is open-source software and is licenced under GPL v3 licence.
 
 ## **Versions**
+0.2.0 - Refactoring and covering by tests. Plugin should be more stable and less error prone. Also fixed issues with: <br>
+    &emsp; - Multiline @link and @code tag folding; <br>
+    &emsp; - @linkplain tag added (@link rules applied); <br>
+    &emsp; - Unescaping for not valid escaped chars sequence; <br>
+    &emsp; - Not interpreting the text as HTML markup inside @code tag (&lt;Generics&gt;); <br>
+
 0.1.0 - Initial release: <br>
            &emsp; * hiding(folding) HTML tags; <br>
            &emsp; * unescape HTML escaped chars; <br>

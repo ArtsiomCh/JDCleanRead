@@ -9,12 +9,11 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.JavaDocTokenType;
-import com.intellij.psi.PsiAnnotatedJavaCodeReferenceElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
 import com.intellij.psi.impl.source.tree.JavaDocElementType;
 import com.intellij.psi.javadoc.PsiDocComment;
+import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -31,6 +30,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   private List<FoldingDescriptor> foldingDescriptors;
   private FoldingGroup foldingGroup;
+  private static final int LENGTH_DOC_INLINE_TAG_END = 1; // }
 
   @NotNull
   @Override
@@ -54,7 +54,8 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
   private void checkInlineJavaDocTags(@NotNull PsiInlineDocTag psiInlineDocTag) {
     if (psiInlineDocTag.getName().equals("code")) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
-    } else if (psiInlineDocTag.getName().equals("link")) {
+    } else if (psiInlineDocTag.getName().equals("link")
+        || psiInlineDocTag.getName().equals("linkplain")) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
 
       // Folding label part of @link tag
@@ -74,31 +75,39 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
                   new TextRange(
                       linkToShow.getTextRange().getEndOffset()
                           - psiInlineDocTag.getTextRange().getStartOffset(),
-                      psiInlineDocTag.getTextLength() - 1))
+                      psiInlineDocTag.getTextLength() - LENGTH_DOC_INLINE_TAG_END))
           .ifPresent(
               labelToFold ->
-                  getRangesToFold(psiInlineDocTag, labelToFold)
+                  excludeLineBreacks(psiInlineDocTag, labelToFold)
                       .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range)));
     }
   }
 
+  private static final int LENGTH_DOC_INLINE_TAG_START = 2; // {@
+
   private void foldJavaDocTagStartEnd(@NotNull PsiInlineDocTag psiInlineDocTag) {
     // fold JavaDoc tag Start
-    addFoldingDescriptor(psiInlineDocTag, new TextRange(0, 2 + psiInlineDocTag.getName().length()));
+    excludeLineBreacks(
+            psiInlineDocTag,
+            new TextRange(0, LENGTH_DOC_INLINE_TAG_START + psiInlineDocTag.getName().length() + 1))
+        .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range));
     // fold JavaDoc tag End
     addFoldingDescriptor(
         psiInlineDocTag,
-        new TextRange(psiInlineDocTag.getTextLength() - 1, psiInlineDocTag.getTextLength()));
+        new TextRange(
+            psiInlineDocTag.getTextLength() - LENGTH_DOC_INLINE_TAG_END,
+            psiInlineDocTag.getTextLength()));
   }
 
   /**
-   * Look inside {@code range} in JavaDoc {@code element} for line breaks
+   * Look inside {@code range} in JavaDoc {@code PsiDocTag element} for line breaks
    *
    * @param element
    * @param range
    * @return List of TextRanges between line breaks inside {@code range}
    */
-  private List<TextRange> getRangesToFold(@NotNull PsiElement element, @NotNull TextRange range) {
+  private List<TextRange> excludeLineBreacks(
+      @NotNull PsiDocTag element, @NotNull TextRange range) {
     List<TextRange> result = new LinkedList<>();
     int prevLineBreak = range.getStartOffset();
     for (PsiElement ws : element.getChildren()) {
