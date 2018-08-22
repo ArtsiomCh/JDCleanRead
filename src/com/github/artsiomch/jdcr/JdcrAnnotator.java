@@ -1,5 +1,6 @@
 package com.github.artsiomch.jdcr;
 
+import com.github.artsiomch.jdcr.utils.JdcrPsiTreeUtils;
 import com.github.artsiomch.jdcr.utils.JdcrStringUtils;
 import com.github.artsiomch.jdcr.utils.Tag;
 import com.intellij.lang.annotation.AnnotationHolder;
@@ -41,7 +42,8 @@ public class JdcrAnnotator implements Annotator {
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
     // TODO activate only if Folding enabled
     this.holder = holder;
-    if (element instanceof PsiDocToken) {
+    if (element instanceof PsiDocToken
+        && !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag((PsiDocToken) element)) {
       // Annotate Font style HTML tags
       annotateAllTagsWithTextAttributes(
           (PsiDocToken) element, FONT_STYLE_TAGS, FONT_STYLE_TEXT_ATTRIBUTES);
@@ -51,7 +53,7 @@ public class JdcrAnnotator implements Annotator {
     } else if (element instanceof PsiInlineDocTag
         && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
       annotateCodeAnnotations((PsiInlineDocTag) element);
-    } else if (element instanceof PsiDocMethodOrFieldRef) { // @link
+    } else if (element instanceof PsiDocMethodOrFieldRef) { // @link @linkplain @value
       annotateLinkAnnotations((PsiDocMethodOrFieldRef) element);
     }
     this.holder = null;

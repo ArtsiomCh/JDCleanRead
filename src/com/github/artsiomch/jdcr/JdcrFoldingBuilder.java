@@ -1,5 +1,6 @@
 package com.github.artsiomch.jdcr;
 
+import com.github.artsiomch.jdcr.utils.JdcrPsiTreeUtils;
 import com.github.artsiomch.jdcr.utils.JdcrStringUtils;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilder;
@@ -42,6 +43,8 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiDocToken.class)
+          .stream()
+          .filter(psiDocToken -> !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag(psiDocToken))
           .forEach(this::checkHtmlTagsAndEscapedChars);
 
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class)
@@ -129,12 +132,6 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
   private void checkHtmlTagsAndEscapedChars(@NotNull PsiDocToken psiDocToken) {
-    // PsiDocToken inside @code or @literal tag -> do not interpreting the text as HTML markup
-    if (psiDocToken.getParent() instanceof PsiInlineDocTag) {
-      String parentName = ((PsiInlineDocTag) psiDocToken.getParent()).getName();
-      if (parentName.equals("code") || parentName.equals("literal"))
-        return;
-    }
     JdcrStringUtils.getCombinedHtmlTags(psiDocToken.getText())
         .forEach(
             textRange -> {

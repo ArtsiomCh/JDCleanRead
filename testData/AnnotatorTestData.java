@@ -4,6 +4,8 @@
  * normal and <code><info descr="null">code</info></code> text
  * normal and <tt><info descr="null">tt</info></tt> text
  * {@code<info descr="null"> code_tag</info>}
+ * {@code<info descr="null"> <b>not_bold</b></info>}
+ * {@literal <b>not_bold</b>}
  * {@link #<info descr="null">link_tag</info> link_name}
  */
 
