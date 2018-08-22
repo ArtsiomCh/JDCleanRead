@@ -52,10 +52,10 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   /** Add FoldingDescriptors for inline JavaDoc tags: @code and @link */
   private void checkInlineJavaDocTags(@NotNull PsiInlineDocTag psiInlineDocTag) {
-    if (psiInlineDocTag.getName().equals("code")) {
+    String tagName = psiInlineDocTag.getName();
+    if (tagName.equals("code") || tagName.equals("literal")) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
-    } else if (psiInlineDocTag.getName().equals("link")
-        || psiInlineDocTag.getName().equals("linkplain")) {
+    } else if (tagName.equals("link") || tagName.equals("linkplain")) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
 
       // Folding label part of @link tag
@@ -106,8 +106,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
    * @param range
    * @return List of TextRanges between line breaks inside {@code range}
    */
-  private List<TextRange> excludeLineBreacks(
-      @NotNull PsiDocTag element, @NotNull TextRange range) {
+  private List<TextRange> excludeLineBreacks(@NotNull PsiDocTag element, @NotNull TextRange range) {
     List<TextRange> result = new LinkedList<>();
     int prevLineBreak = range.getStartOffset();
     for (PsiElement ws : element.getChildren()) {
@@ -130,10 +129,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
   private void checkHtmlTagsAndEscapedChars(@NotNull PsiDocToken psiDocToken) {
-    if (psiDocToken.getParent() instanceof PsiInlineDocTag
-        && ((PsiInlineDocTag) psiDocToken.getParent()).getName().equals("code"))
-      // PsiDocToken inside @code tag -> do not interpreting the text as HTML markup
-      return;
+    // PsiDocToken inside @code or @literal tag -> do not interpreting the text as HTML markup
+    if (psiDocToken.getParent() instanceof PsiInlineDocTag) {
+      String parentName = ((PsiInlineDocTag) psiDocToken.getParent()).getName();
+      if (parentName.equals("code") || parentName.equals("literal"))
+        return;
+    }
     JdcrStringUtils.getCombinedHtmlTags(psiDocToken.getText())
         .forEach(
             textRange -> {

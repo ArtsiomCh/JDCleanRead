@@ -24,6 +24,10 @@ public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
     myFixture.testFolding(getTestDataPath() + "/FoldingCodeTagWithGenericsTestData.java");
   }
 
+  public void testFoldingLiteralTag() {
+    myFixture.testFolding(getTestDataPath() + "/FoldingLiteralTagTestData.java");
+  }
+
   public void testFoldingLinkTag() {
     myFixture.testFolding(getTestDataPath() + "/FoldingLinkTagTestData.java");
   }
