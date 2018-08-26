@@ -135,8 +135,11 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     JdcrStringUtils.getCombinedHtmlTags(psiDocToken.getText())
         .forEach(
             textRange -> {
-              if (textRange.substring(psiDocToken.getText()).toLowerCase().contains("<li>")) {
+              String tagsToFold = textRange.substring(psiDocToken.getText()).toLowerCase();
+              if (tagsToFold.contains("<li>")) {
                 addFoldingDescriptor(psiDocToken, textRange, " - ");
+//              } else if (tagsToFold.contains("<td>")) {
+//                addFoldingDescriptor(psiDocToken, textRange, "\t");
               } else {
                 addFoldingDescriptor(psiDocToken, textRange);
               }

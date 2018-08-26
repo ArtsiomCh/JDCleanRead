@@ -7,7 +7,7 @@
 <h4>How?</h4>
       <li> Hiding(folding) HTML tags;
       <li> Unescape HTML escaped chars;
-      <li> Apply appropriate text styles for value of tags: &lt;code&gt; | &lt;tt&gt; | &lt;li&gt; | &lt;b&gt; | &lt;i&gt; | @code | @link;
+      <li> Apply appropriate text styles for value of tags: &lt;code&gt; | &lt;tt&gt; | &lt;li&gt; | &lt;b&gt; | &lt;i&gt; | @code | @literal | @link | @linkplain | @value;
       <li> Some tag value text styles are customisable at Settings -> Editor -> Color Scheme -> JavaDoc Clean Read. <br>
 
 Both HTML-JavaDoc tags hiding and HTML escaped chars unescaping are implemented through IntelliJ <a href="https://www.jetbrains.com/help/idea/code-folding.html">code folding</a>. So all shortcuts (Ctrl+. Ctrl+NumPad + and others) works. As well as <i>code folding toggles</i> (like <code>&#x2302;</code>) shown in the editor to the left of the corresponding multiline folding regions. <br>       
@@ -27,6 +27,10 @@ For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
 Plugin is open-source software and is licenced under GPL v3 licence.
 
 ## **Versions**
+0.2.1 - Few improvements: <br>
+    &emsp; - @literal tag support added; <br>
+    &emsp; - text inside @code and @literal is not interpreting as HTML markup;
+
 0.2.0 - Refactoring and covering by tests. Plugin should be more stable and less error prone. Also fixed issues with: <br>
     &emsp; - Multiline @link and @code tag folding; <br>
     &emsp; - @linkplain tag added (@link rules applied); <br>
