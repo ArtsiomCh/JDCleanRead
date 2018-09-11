@@ -17,15 +17,22 @@ import java.util.Arrays;
 import java.util.Map;
 
 public class JdcrColorSettingsPage implements ColorSettingsPage {
-  public static final TextAttributesKey CODE_TAG = TextAttributesKey.createTextAttributesKey(
+  public static final TextAttributesKey CODE_TAG =
+      TextAttributesKey.createTextAttributesKey(
           "code tag", DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
-  public static final TextAttributesKey LINK_TAG = TextAttributesKey.createTextAttributesKey(
+  public static final TextAttributesKey LINK_TAG =
+      TextAttributesKey.createTextAttributesKey(
           "link tag", DefaultLanguageHighlighterColors.CLASS_NAME);
+  public static final TextAttributesKey HTML_LINK_TAG =
+      TextAttributesKey.createTextAttributesKey(
+          "html link tag", DefaultLanguageHighlighterColors.NUMBER);
 
-  private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-          new AttributesDescriptor("Tag value of: <code> | <tt> | @code", CODE_TAG),
-          new AttributesDescriptor("Tag value of: @link", LINK_TAG)
-  };
+  private static final AttributesDescriptor[] DESCRIPTORS =
+      new AttributesDescriptor[] {
+        new AttributesDescriptor("Tag value of: <code> | <tt> | @code", CODE_TAG),
+        new AttributesDescriptor("Tag value of html link: <a href=\"...\">...</a>", HTML_LINK_TAG),
+        new AttributesDescriptor("Tag value of: @link", LINK_TAG)
+      };
 
   @Nullable
   @Override
@@ -36,25 +43,24 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
   @NotNull
   @Override
   public SyntaxHighlighter getHighlighter() {
-    return JavaSyntaxHighlighterFactory.getSyntaxHighlighter( JavaLanguage.INSTANCE, null, null);
+    return JavaSyntaxHighlighterFactory.getSyntaxHighlighter(JavaLanguage.INSTANCE, null, null);
   }
 
   @NotNull
   @Override
   public String getDemoText() {
-    return  "/**\n"+
-            " * To convert any <tt><_code>object</_code></tt> of {@code <_code>Object</_code>} class to <code><_code>String</_code></code> use \n"+
-            " * {@link java.lang.Object#<_link>toString()</_link> toString()} method.\n"+
-            " */"
-    ;
+    return "/**\n"
+        + " * To convert any <tt><_code>object</_code></tt> of {@code <_code>Object</_code>} class to <code><_code>String</_code></code> use \n"
+        + " * {@link java.lang.Object#<_link>toString()</_link> toString()} method.\n"
+        + " * html link <a href=\"http://www.jetbrains.org\"><_a>JetBrains</_a></a>.\n"
+        + " */";
   }
 
   @Nullable
   @Override
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
     return ContainerUtil.newHashMap(
-            Arrays.asList( "_code", "_link" ),
-            Arrays.asList( CODE_TAG, LINK_TAG ));
+        Arrays.asList("_code", "_link", "_a"), Arrays.asList(CODE_TAG, LINK_TAG, HTML_LINK_TAG));
   }
 
   @NotNull

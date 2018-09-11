@@ -26,6 +26,9 @@ public class JdcrAnnotator implements Annotator {
   private static final List<Tag> CODE_TAGS =
       Arrays.asList(new Tag("<code>", "</code>"), new Tag("<tt>", "</tt>"));
 
+  private static final List<Tag> HTML_LINK_TAGS =
+      Arrays.asList(new Tag("<a href=\"", "</a>"));
+
   private static final List<Tag> FONT_STYLE_TAGS =
       Arrays.asList(new Tag("<b>", "</b>"), new Tag("<i>", "</i>"));
 
@@ -50,6 +53,9 @@ public class JdcrAnnotator implements Annotator {
       // Annotate Code HTML tags
       annotateAllTagsWithTextAttributes(
           (PsiDocToken) element, CODE_TAGS, JdcrColorSettingsPage.CODE_TAG.getDefaultAttributes());
+      // Annotate HTML link tags
+      annotateAllTagsWithTextAttributes(
+          (PsiDocToken) element, HTML_LINK_TAGS, JdcrColorSettingsPage.HTML_LINK_TAG.getDefaultAttributes());
     } else if (element instanceof PsiInlineDocTag
         && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
       annotateCodeAnnotations((PsiInlineDocTag) element);

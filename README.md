@@ -27,6 +27,8 @@ For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
 Plugin is open-source software and is licenced under GPL v3 licence.
 
 ## **Versions**
+0.2.2 - Highlight &lt;a href=...&gt; tag value &lt;/a&gt; (customisable). <br>
+
 0.2.1 - Few improvements: <br>
     &emsp; - @literal tag support added; <br>
     &emsp; - text inside @code and @literal is not interpreting as HTML markup;
