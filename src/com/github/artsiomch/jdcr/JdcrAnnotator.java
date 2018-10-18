@@ -77,14 +77,10 @@ public class JdcrAnnotator implements Annotator {
   private void annotateCodeAnnotations(@NotNull PsiInlineDocTag element) {
     Arrays.stream(element.getDataElements())
         .filter(it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
-        .findFirst()
-        .ifPresent(
+        .forEach(
             psiElement ->
                 holder
-                    .createInfoAnnotation(
-                        new TextRange(
-                            psiElement.getTextOffset(), element.getTextRange().getEndOffset() - 1),
-                        null)
+                    .createInfoAnnotation(psiElement, null)
                     .setTextAttributes(JdcrColorSettingsPage.CODE_TAG));
   }
 

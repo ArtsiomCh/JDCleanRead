@@ -6,6 +6,8 @@
  * html link <a href="http://www.jetbrains.org"><info descr="null">JetBrains</info></a>
  * {@code<info descr="null"> code_tag</info>}
  * {@code<info descr="null"> <b>not_bold</b></info>}
+ * {@code<info descr="null"> multiline</info>
+ *<info descr="null"> code_tag</info>}
  * {@literal <b>not_bold</b>}
  * {@link #<info descr="null">link_tag</info> link_name}
  */
