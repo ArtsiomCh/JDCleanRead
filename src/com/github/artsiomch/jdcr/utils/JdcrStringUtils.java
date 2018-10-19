@@ -68,10 +68,10 @@ public class JdcrStringUtils {
    *
    * @param text text to parse
    * @param tagsToFind HTML tags to search for
-   * @return list of TextRange of HTML tags inside text if any
+   * @return list of TextRange of HTML tag's values inside text if any
    */
   @NotNull
-  public static List<TextRange> getTextRangesForHtmlTags(@NotNull String text, @NotNull List<Tag> tagsToFind) {
+  public static List<TextRange> getTextRangesForHtmlTagValues(@NotNull String text, @NotNull List<Tag> tagsToFind) {
     List<TextRange> foundHtmlTags = getCombinedHtmlTags(text);
     if (foundHtmlTags.isEmpty()) {
       return EMPTY_ARRAY;

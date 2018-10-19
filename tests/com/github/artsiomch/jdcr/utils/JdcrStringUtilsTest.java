@@ -61,24 +61,24 @@ public class JdcrStringUtilsTest {
     String text;
 
     text = "no tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTags(text, tagsToFind);
+    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
     assertTrue(text, HtmlTags.isEmpty());
 
     text = "<b>one</b> tag test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTags(text, tagsToFind);
+    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
     assertEquals(text, HtmlTags.size(), 1);
     assertEquals(text, HtmlTags.get(0).getStartOffset(), 3);
     assertEquals(text, HtmlTags.get(0).getEndOffset(), 6);
 
     text = "<b><i>combined</b></i> tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTags(text, tagsToFind);
+    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
     assertEquals(text, 1, HtmlTags.size());
     assertEquals(text, 6, HtmlTags.get(0).getStartOffset());
     assertEquals(text, 14, HtmlTags.get(0).getEndOffset());
 
     tagsToFind = Arrays.asList(new Tag("<a href=\"", "\">"), new Tag("\">", "</a>"));
     text = "<a href=\"www\">HtmlLink</a> tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTags(text, tagsToFind);
+    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
     assertEquals(text, 1, HtmlTags.size());
     assertEquals(text, 14, HtmlTags.get(0).getStartOffset());
     assertEquals(text, 22, HtmlTags.get(0).getEndOffset());

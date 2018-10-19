@@ -5,7 +5,7 @@ import com.github.artsiomch.jdcr.utils.JdcrStringUtils;
 import com.github.artsiomch.jdcr.utils.Tag;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
-import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.JavaDocTokenType;
 import com.intellij.psi.PsiElement;
@@ -14,11 +14,8 @@ import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.Font;
 import java.util.Arrays;
 import java.util.List;
-
-import static com.intellij.openapi.editor.DefaultLanguageHighlighterColors.*;
 
 public class JdcrAnnotator implements Annotator {
   private AnnotationHolder holder;
@@ -28,17 +25,9 @@ public class JdcrAnnotator implements Annotator {
 
   private static final List<Tag> HTML_LINK_TAGS = Arrays.asList(new Tag("<a href=\"", "</a>"));
 
-  private static final List<Tag> FONT_STYLE_TAGS =
-      Arrays.asList(new Tag("<b>", "</b>"), new Tag("<i>", "</i>"));
+  private static final List<Tag> BOLD_TAGS = Arrays.asList(new Tag("<b>", "</b>"));
 
-  private static final TextAttributes FONT_STYLE_TEXT_ATTRIBUTES = setFontStyleTextAttributes();
-  // fixme
-  private static TextAttributes setFontStyleTextAttributes() {
-    TextAttributes textAttributes = DOC_COMMENT.getDefaultAttributes().clone();
-    /** Set or revert FontType. See {@link Font} */
-    textAttributes.setFontType(textAttributes.getFontType() ^ Font.BOLD);
-    return textAttributes;
-  }
+  private static final List<Tag> ITALIC_TAGS = Arrays.asList(new Tag("<i>", "</i>"));
 
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
@@ -49,15 +38,15 @@ public class JdcrAnnotator implements Annotator {
         && !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag((PsiDocToken) element)) {
       // Annotate Font style HTML tags
       annotateAllTagsWithTextAttributes(
-          (PsiDocToken) element, FONT_STYLE_TAGS, FONT_STYLE_TEXT_ATTRIBUTES);
+          (PsiDocToken) element, BOLD_TAGS, JdcrColorSettingsPage.BOLD_FONT);
+      annotateAllTagsWithTextAttributes(
+          (PsiDocToken) element, ITALIC_TAGS, JdcrColorSettingsPage.ITALIC_FONT);
       // Annotate Code HTML tags
       annotateAllTagsWithTextAttributes(
-          (PsiDocToken) element, CODE_TAGS, JdcrColorSettingsPage.CODE_TAG.getDefaultAttributes());
+          (PsiDocToken) element, CODE_TAGS, JdcrColorSettingsPage.CODE_TAG);
       // Annotate HTML link tags
       annotateAllTagsWithTextAttributes(
-          (PsiDocToken) element,
-          HTML_LINK_TAGS,
-          JdcrColorSettingsPage.HTML_LINK_TAG.getDefaultAttributes());
+          (PsiDocToken) element, HTML_LINK_TAGS, JdcrColorSettingsPage.HTML_LINK_TAG);
     } else if (element instanceof PsiInlineDocTag
         && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
       annotateCodeAnnotations((PsiInlineDocTag) element);
@@ -85,12 +74,12 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateAllTagsWithTextAttributes(
-      @NotNull PsiDocToken element, List<Tag> tagsToAnnotate, TextAttributes textAttributes) {
+      @NotNull PsiDocToken element, List<Tag> tagsToAnnotate, TextAttributesKey textAttributesKey) {
     for (TextRange textRange :
-        JdcrStringUtils.getTextRangesForHtmlTags(element.getText(), tagsToAnnotate)) {
+        JdcrStringUtils.getTextRangesForHtmlTagValues(element.getText(), tagsToAnnotate)) {
       holder
           .createInfoAnnotation(textRange.shiftRight(element.getTextRange().getStartOffset()), null)
-          .setEnforcedTextAttributes(textAttributes);
+          .setTextAttributes(textAttributesKey);
     }
   }
 }
