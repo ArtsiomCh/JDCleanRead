@@ -20,8 +20,8 @@ public class JdcrStringUtils {
    * @return list of TextRange of HTML tags inside text
    */
   @NotNull
-  public static List<TextRange> getCombinedHtmlTags(String text) {
-    return getCombinedElementsInText(text, HTML_TAG);
+  public static List<TextRange> getHtmlTags(String text) {
+    return getElementsInText(text, HTML_TAG);
   }
 
   @NotNull
@@ -72,7 +72,7 @@ public class JdcrStringUtils {
    */
   @NotNull
   public static List<TextRange> getTextRangesForHtmlTagValues(@NotNull String text, @NotNull List<Tag> tagsToFind) {
-    List<TextRange> foundHtmlTags = getCombinedHtmlTags(text);
+    List<TextRange> foundHtmlTags = getHtmlTags(text);
     if (foundHtmlTags.isEmpty()) {
       return EMPTY_ARRAY;
     }

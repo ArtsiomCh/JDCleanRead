@@ -10,77 +10,81 @@ public class JdcrStringUtilsTest {
 
   @Test
   public void getCombinedHtmlTagsTest() {
-    List<TextRange> combinedHtmlTags;
+    List<TextRange> htmlTags;
     String text;
 
     text = "no tags test";
-    combinedHtmlTags = JdcrStringUtils.getCombinedHtmlTags(text);
-    assertTrue(text, combinedHtmlTags.isEmpty());
+    htmlTags = JdcrStringUtils.getHtmlTags(text);
+    assertTrue(text, htmlTags.isEmpty());
 
     text = "<b> one tag test";
-    combinedHtmlTags = JdcrStringUtils.getCombinedHtmlTags(text);
-    assertEquals(text, combinedHtmlTags.size(), 1);
-    assertEquals(text, combinedHtmlTags.get(0).getStartOffset(), 0);
-    assertEquals(text, combinedHtmlTags.get(0).getEndOffset(), 3);
+    htmlTags = JdcrStringUtils.getHtmlTags(text);
+    assertEquals(text, htmlTags.size(), 1);
+    assertEquals(text, htmlTags.get(0).getStartOffset(), 0);
+    assertEquals(text, htmlTags.get(0).getEndOffset(), 3);
 
     text = "<b><i> combined tags test";
-    combinedHtmlTags = JdcrStringUtils.getCombinedHtmlTags(text);
-    assertEquals(text, combinedHtmlTags.size(), 1);
-    assertEquals(text, combinedHtmlTags.get(0).getStartOffset(), 0);
-    assertEquals(text, combinedHtmlTags.get(0).getEndOffset(), 6);
+    htmlTags = JdcrStringUtils.getHtmlTags(text);
+    assertEquals(text, htmlTags.size(), 2);
+    assertEquals(text, htmlTags.get(0).getStartOffset(), 0);
+    assertEquals(text, htmlTags.get(0).getEndOffset(), 3);
+    assertEquals(text, htmlTags.get(1).getStartOffset(), 3);
+    assertEquals(text, htmlTags.get(1).getEndOffset(), 6);
   }
 
   @Test
   public void getCombinedHtmlEscapedCharsTest() {
-    List<TextRange> combinedHtmlEscapedChars;
+    List<TextRange> htmlEscapedChars;
     String text;
 
     text = "no HTML escaped chars test";
-    combinedHtmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
-    assertTrue(text, combinedHtmlEscapedChars.isEmpty());
+    htmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
+    assertTrue(text, htmlEscapedChars.isEmpty());
 
     text = "&amp; one HTML escaped char test";
-    combinedHtmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
-    assertEquals(text, combinedHtmlEscapedChars.size(), 1);
-    assertEquals(text, combinedHtmlEscapedChars.get(0).getStartOffset(), 0);
-    assertEquals(text, combinedHtmlEscapedChars.get(0).getEndOffset(), 5);
+    htmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
+    assertEquals(text, htmlEscapedChars.size(), 1);
+    assertEquals(text, htmlEscapedChars.get(0).getStartOffset(), 0);
+    assertEquals(text, htmlEscapedChars.get(0).getEndOffset(), 5);
 
     text = "&lt;&lt; two HTML escaped chars test";
-    combinedHtmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
-    assertEquals(text, 2, combinedHtmlEscapedChars.size());
-    assertEquals(text, 0, combinedHtmlEscapedChars.get(0).getStartOffset());
-    assertEquals(text, 4, combinedHtmlEscapedChars.get(0).getEndOffset());
-    assertEquals(text, 4, combinedHtmlEscapedChars.get(1).getStartOffset());
-    assertEquals(text, 8, combinedHtmlEscapedChars.get(1).getEndOffset());
+    htmlEscapedChars = JdcrStringUtils.getHtmlEscapedChars(text);
+    assertEquals(text, 2, htmlEscapedChars.size());
+    assertEquals(text, 0, htmlEscapedChars.get(0).getStartOffset());
+    assertEquals(text, 4, htmlEscapedChars.get(0).getEndOffset());
+    assertEquals(text, 4, htmlEscapedChars.get(1).getStartOffset());
+    assertEquals(text, 8, htmlEscapedChars.get(1).getEndOffset());
   }
 
   @Test
   public void getTextRangesForHtmlTagsTest() {
-    List<TextRange> HtmlTags;
+    List<TextRange> htmlTagValues;
     List<Tag> tagsToFind = Arrays.asList(new Tag("<b>", "</b>"), new Tag("<i>", "</i>"));
     String text;
 
     text = "no tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
-    assertTrue(text, HtmlTags.isEmpty());
+    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    assertTrue(text, htmlTagValues.isEmpty());
 
     text = "<b>one</b> tag test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
-    assertEquals(text, HtmlTags.size(), 1);
-    assertEquals(text, HtmlTags.get(0).getStartOffset(), 3);
-    assertEquals(text, HtmlTags.get(0).getEndOffset(), 6);
+    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    assertEquals(text, htmlTagValues.size(), 1);
+    assertEquals(text, htmlTagValues.get(0).getStartOffset(), 3);
+    assertEquals(text, htmlTagValues.get(0).getEndOffset(), 6);
 
     text = "<b><i>combined</b></i> tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
-    assertEquals(text, 1, HtmlTags.size());
-    assertEquals(text, 6, HtmlTags.get(0).getStartOffset());
-    assertEquals(text, 14, HtmlTags.get(0).getEndOffset());
+    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    assertEquals(text, 2, htmlTagValues.size());
+    assertEquals(text, 3, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 14, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 6, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 18, htmlTagValues.get(1).getEndOffset());
 
     tagsToFind = Arrays.asList(new Tag("<a href=\"", "\">"), new Tag("\">", "</a>"));
     text = "<a href=\"www\">HtmlLink</a> tags test";
-    HtmlTags = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
-    assertEquals(text, 1, HtmlTags.size());
-    assertEquals(text, 14, HtmlTags.get(0).getStartOffset());
-    assertEquals(text, 22, HtmlTags.get(0).getEndOffset());
+    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 14, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 22, htmlTagValues.get(0).getEndOffset());
   }
 }
