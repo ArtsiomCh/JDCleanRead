@@ -10,6 +10,15 @@
  *<info descr="null"> code_tag</info>}
  * {@literal <b>not_bold</b>}
  * {@link #<info descr="null">link_tag</info> link_name}
+ *
+ * inline <b><info descr="null">bold tag </info></b> and multiline <b><info descr="null"> bold </info>
+ *<info descr="null"> tag</info></b> with another multiline <b><info descr="null"> bold </info>
+ *<info descr="null"> tag</info></b> with inline <b><info descr="null">bold tag</info></b>.
+ *
+ * milti line href tag <info descr="null"><a </info>
+ *<info descr="null"> href=</info>
+ *<info descr="null"> "www"></info><info descr="null"> with multiline </info>
+ *<info descr="null"> tag value </info></a>
  */
 
 public class AnnotatorTestData {

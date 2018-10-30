@@ -44,11 +44,11 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
 
   private static final AttributesDescriptor[] DESCRIPTORS =
       new AttributesDescriptor[] {
-        new AttributesDescriptor("Tag value of: <code> | <tt> | @code", CODE_TAG),
+        new AttributesDescriptor("Tag value of: <code> | <tt> | @code | <pre>", CODE_TAG),
         new AttributesDescriptor("Tag value of html link: <a href=\"...\">...</a>", HTML_LINK_TAG),
         new AttributesDescriptor("Tag value of: @link", LINK_TAG),
         new AttributesDescriptor("Tag value of: <b>", BOLD_FONT),
-        new AttributesDescriptor("Tag value of: <i>", ITALIC_FONT)
+        new AttributesDescriptor("Tag value of: <i> | <em>", ITALIC_FONT)
       };
 
   @Nullable

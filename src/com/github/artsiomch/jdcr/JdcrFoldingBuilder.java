@@ -9,27 +9,21 @@ import com.intellij.lang.folding.NamedFoldingDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.JavaDocTokenType;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.JavaDocElementType;
 import com.intellij.psi.javadoc.PsiDocComment;
-import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Stack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.parser.Parser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class JdcrFoldingBuilder implements FoldingBuilder {
 
-  private List<FoldingDescriptor> foldingDescriptors;
+  private Stack<FoldingDescriptor> foldingDescriptors;
   private FoldingGroup foldingGroup;
   private static final int LENGTH_DOC_INLINE_TAG_END = 1; // }
 
@@ -37,8 +31,9 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
   @Override
   public FoldingDescriptor[] buildFoldRegions(@NotNull ASTNode node, @NotNull Document document) {
     PsiElement root = node.getPsi();
-    foldingDescriptors = new ArrayList<>();
+    foldingDescriptors = new Stack<>();
 
+//    long startTime= System.currentTimeMillis();
     for (PsiDocComment psiDocComment : PsiTreeUtil.findChildrenOfType(root, PsiDocComment.class)) {
       foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
@@ -50,6 +45,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class)
           .forEach(this::checkInlineJavaDocTags);
     }
+//    System.out.printf("Folding time: %d\n", (System.currentTimeMillis() - startTime));
     return foldingDescriptors.toArray(new FoldingDescriptor[0]);
   }
 
@@ -81,7 +77,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
                       psiInlineDocTag.getTextLength() - LENGTH_DOC_INLINE_TAG_END))
           .ifPresent(
               labelToFold ->
-                  excludeLineBreacks(psiInlineDocTag, labelToFold)
+                  JdcrPsiTreeUtils.excludeLineBreaks(psiInlineDocTag, labelToFold)
                       .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range)));
     }
   }
@@ -90,7 +86,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   private void foldJavaDocTagStartEnd(@NotNull PsiInlineDocTag psiInlineDocTag) {
     // fold JavaDoc tag Start
-    excludeLineBreacks(
+    JdcrPsiTreeUtils.excludeLineBreaks(
             psiInlineDocTag,
             new TextRange(0, LENGTH_DOC_INLINE_TAG_START + psiInlineDocTag.getName().length() + 1))
         .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range));
@@ -102,34 +98,6 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
             psiInlineDocTag.getTextLength()));
   }
 
-  /**
-   * Look inside {@code range} in JavaDoc {@code PsiDocTag element} for line breaks
-   *
-   * @param element
-   * @param range
-   * @return List of TextRanges between line breaks inside {@code range}
-   */
-  private List<TextRange> excludeLineBreacks(@NotNull PsiDocTag element, @NotNull TextRange range) {
-    List<TextRange> result = new LinkedList<>();
-    int prevLineBreak = range.getStartOffset();
-    for (PsiElement ws : element.getChildren()) {
-      if (ws instanceof PsiWhiteSpace
-          && ws.getNextSibling() != null
-          && ws.getNextSibling().getNode().getElementType()
-              == JavaDocTokenType.DOC_COMMENT_LEADING_ASTERISKS
-          && range.contains(ws.getStartOffsetInParent())) {
-        if (ws.getStartOffsetInParent() > prevLineBreak) {
-          result.add(new TextRange(prevLineBreak, ws.getStartOffsetInParent()));
-        }
-        prevLineBreak = ws.getNextSibling().getStartOffsetInParent() + 1;
-      }
-    }
-    if (prevLineBreak < range.getEndOffset()) {
-      result.add(new TextRange(prevLineBreak, range.getEndOffset()));
-    }
-    return result;
-  }
-
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
   private void checkHtmlTagsAndEscapedChars(@NotNull PsiDocToken psiDocToken) {
     JdcrStringUtils.getHtmlTags(psiDocToken.getText())
@@ -138,12 +106,17 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
               String tagsToFold = textRange.substring(psiDocToken.getText()).toLowerCase();
               if (tagsToFold.contains("<li>")) {
                 addFoldingDescriptor(psiDocToken, textRange, " - ");
-//              } else if (tagsToFold.contains("<td>")) {
-//                addFoldingDescriptor(psiDocToken, textRange, "\t");
+                //              } else if (tagsToFold.contains("<td>")) {
+                //                addFoldingDescriptor(psiDocToken, textRange, "\t");
               } else {
                 addFoldingDescriptor(psiDocToken, textRange);
               }
             });
+
+    // Check for Multi-line tag.
+    JdcrPsiTreeUtils.getMultiLineTag(psiDocToken)
+        .forEach(textRange -> addFoldingDescriptor(psiDocToken.getParent(), textRange));
+
     JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())
         .forEach(
             textRange ->
@@ -159,12 +132,22 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   private void addFoldingDescriptor(
       @NotNull PsiElement element, @NotNull TextRange range, String placeholderText) {
-    foldingDescriptors.add(
+
+    TextRange absoluteNewRange = range.shiftRight(element.getTextRange().getStartOffset());
+    if (!foldingDescriptors.empty()
+        && foldingDescriptors.peek().getRange().getEndOffset()
+            == absoluteNewRange.getStartOffset()) {
+      FoldingDescriptor prevFoldingDescriptor = foldingDescriptors.pop();
+      absoluteNewRange =
+          new TextRange(
+              prevFoldingDescriptor.getRange().getStartOffset(),
+              absoluteNewRange.getEndOffset());
+      placeholderText = prevFoldingDescriptor.getPlaceholderText() + placeholderText;
+    }
+
+    foldingDescriptors.push(
         new NamedFoldingDescriptor(
-            element.getNode(),
-            range.shiftRight(element.getTextRange().getStartOffset()),
-            foldingGroup,
-            placeholderText));
+            element.getNode(), absoluteNewRange, foldingGroup, placeholderText));
   }
 
   @Nullable

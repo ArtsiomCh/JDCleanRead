@@ -1,7 +1,6 @@
 package com.github.artsiomch.jdcr.utils;
 
 import com.intellij.openapi.util.TextRange;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -9,7 +8,7 @@ import static org.junit.Assert.*;
 public class JdcrStringUtilsTest {
 
   @Test
-  public void getCombinedHtmlTagsTest() {
+  public void getHtmlTagsTest() {
     List<TextRange> htmlTags;
     String text;
 
@@ -30,10 +29,42 @@ public class JdcrStringUtilsTest {
     assertEquals(text, htmlTags.get(0).getEndOffset(), 3);
     assertEquals(text, htmlTags.get(1).getStartOffset(), 3);
     assertEquals(text, htmlTags.get(1).getEndOffset(), 6);
+
+    text = "Html comment <!-- not_a_tag -->";
+    htmlTags = JdcrStringUtils.getHtmlTags(text);
+    assertTrue(text, htmlTags.isEmpty());
+
+    // fixme: text = "Html comment <!-- <not_a_tag> -->";
+    htmlTags = JdcrStringUtils.getHtmlTags(text);
+    assertTrue(text, htmlTags.isEmpty());
   }
 
   @Test
-  public void getCombinedHtmlEscapedCharsTest() {
+  public void getIncompleteHtmlTagTest() {
+    TextRange incompleteHtmlTag;
+    String text;
+
+    text = "no incomplete <tag> test";
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagStart(text);
+    assertNull(text, incompleteHtmlTag);
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagEnd(text);
+    assertNull(text, incompleteHtmlTag);
+
+    text = "incomplete <tag start test";
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagStart(text);
+    assertNotNull(text, incompleteHtmlTag);
+    assertEquals(text, 11, incompleteHtmlTag.getStartOffset());
+    assertEquals(text, 26, incompleteHtmlTag.getEndOffset());
+
+    text = "incomplete tag> end test";
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagEnd(text);
+    assertNotNull(text, incompleteHtmlTag);
+    assertEquals(text, 0, incompleteHtmlTag.getStartOffset());
+    assertEquals(text, 15, incompleteHtmlTag.getEndOffset());
+  }
+
+    @Test
+  public void getHtmlEscapedCharsTest() {
     List<TextRange> htmlEscapedChars;
     String text;
 
@@ -57,32 +88,99 @@ public class JdcrStringUtilsTest {
   }
 
   @Test
-  public void getTextRangesForHtmlTagsTest() {
+  public void getValuesOfTagTest() {
     List<TextRange> htmlTagValues;
-    List<Tag> tagsToFind = Arrays.asList(new Tag("<b>", "</b>"), new Tag("<i>", "</i>"));
+    Tag tag1 = new Tag("<tag1>", "</tag1>");
+    Tag tag2 = new Tag("<tag2>", "</tag2>");
     String text;
 
     text = "no tags test";
-    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
     assertTrue(text, htmlTagValues.isEmpty());
 
-    text = "<b>one</b> tag test";
-    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    text = "<tag1>one</tag1> tag test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
     assertEquals(text, htmlTagValues.size(), 1);
-    assertEquals(text, htmlTagValues.get(0).getStartOffset(), 3);
-    assertEquals(text, htmlTagValues.get(0).getEndOffset(), 6);
+    assertEquals(text, htmlTagValues.get(0).getStartOffset(), 6);
+    assertEquals(text, htmlTagValues.get(0).getEndOffset(), 9);
 
-    text = "<b><i>combined</b></i> tags test";
-    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    text = "<tag1>one</tag1> tag happens <tag1>twice</tag1> withing the row test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
     assertEquals(text, 2, htmlTagValues.size());
-    assertEquals(text, 3, htmlTagValues.get(0).getStartOffset());
-    assertEquals(text, 14, htmlTagValues.get(0).getEndOffset());
-    assertEquals(text, 6, htmlTagValues.get(1).getStartOffset());
-    assertEquals(text, 18, htmlTagValues.get(1).getEndOffset());
+    assertEquals(text, 6, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 9, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 35, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 40, htmlTagValues.get(1).getEndOffset());
 
-    tagsToFind = Arrays.asList(new Tag("<a href=\"", "\">"), new Tag("\">", "</a>"));
+    text = "<tag1>first</tag1> and <tag2>second</tag2> tags withing the row test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 6, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 11, htmlTagValues.get(0).getEndOffset());
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag2);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 29, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 35, htmlTagValues.get(0).getEndOffset());
+
+    text = "<tag1><tag2>combined</tag2></tag1> tags test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 6, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 27, htmlTagValues.get(0).getEndOffset());
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag2);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 12, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 20, htmlTagValues.get(0).getEndOffset());
+
+    text = "possible multiline tag value</tag1> end test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 0, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 28, htmlTagValues.get(0).getEndOffset());
+
+    text = "possible multiline tag value <tag1>start test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 1, htmlTagValues.size());
+    assertEquals(text, 35, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 45, htmlTagValues.get(0).getEndOffset());
+
+    text = "<tag1>one</tag1> tag and possible multiline tag value <tag1>start test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 2, htmlTagValues.size());
+    assertEquals(text, 6, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 9, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 60, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 70, htmlTagValues.get(1).getEndOffset());
+
+    text = "possible multiline tag value</tag1> end and <tag1>another</tag1> tag occurrence test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 2, htmlTagValues.size());
+    assertEquals(text, 0, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 28, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 50, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 57, htmlTagValues.get(1).getEndOffset());
+
+    text = "possible multiline tag value</tag1> end and start<tag1> test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 2, htmlTagValues.size());
+    assertEquals(text, 0, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 28, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 55, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 60, htmlTagValues.get(1).getEndOffset());
+
+    text = "possible multiline tag value</tag1> end and <tag1>another</tag1> tag occurrence and start<tag1> test";
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, tag1);
+    assertEquals(text, 3, htmlTagValues.size());
+    assertEquals(text, 0, htmlTagValues.get(0).getStartOffset());
+    assertEquals(text, 28, htmlTagValues.get(0).getEndOffset());
+    assertEquals(text, 50, htmlTagValues.get(1).getStartOffset());
+    assertEquals(text, 57, htmlTagValues.get(1).getEndOffset());
+    assertEquals(text, 95, htmlTagValues.get(2).getStartOffset());
+    assertEquals(text, 100, htmlTagValues.get(2).getEndOffset());
+
+    Tag htmlTagRef = new Tag("<a", "</a>");
     text = "<a href=\"www\">HtmlLink</a> tags test";
-    htmlTagValues = JdcrStringUtils.getTextRangesForHtmlTagValues(text, tagsToFind);
+    htmlTagValues = JdcrStringUtils.getValuesOfTag(text, htmlTagRef);
     assertEquals(text, 1, htmlTagValues.size());
     assertEquals(text, 14, htmlTagValues.get(0).getStartOffset());
     assertEquals(text, 22, htmlTagValues.get(0).getEndOffset());

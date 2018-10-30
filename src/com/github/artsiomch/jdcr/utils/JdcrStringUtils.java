@@ -8,9 +8,15 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.Nullable;
 
 public class JdcrStringUtils {
-  private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
+  private static final String T_START = "<(?!!--)"; // excluding Html comment beginning <!--
+  private static final String T_END = "(?<!--)>"; // excluding Html comment ending -->
+  private static final String T_BODY = "[^<>]+";
+  private static final Pattern HTML_TAG = Pattern.compile(T_START + T_BODY + T_END);
+  private static final Pattern HTML_INCOMPLETE_TAG_START = Pattern.compile(T_START + T_BODY);
+  private static final Pattern HTML_INCOMPLETE_TAG_END = Pattern.compile(T_BODY + T_END);
   private static final Pattern HTML_ESC_CHAR = Pattern.compile("&[^;]+;");
 
   /**
@@ -24,8 +30,38 @@ public class JdcrStringUtils {
     return getElementsInText(text, HTML_TAG);
   }
 
+  /**
+   * Parse given text to find Start of <b>incomplete</b> HTML tag
+   *
+   * @param text given text
+   * @return TextRange of incomplete HTML tag inside text
+   */
+  @Nullable
+  public static TextRange getIncompleteHtmlTagStart(String text) {
+    return getElementsInText(text, HTML_INCOMPLETE_TAG_START)
+        .stream()
+        .filter(range -> range.getEndOffset() == text.length())
+        .findAny()
+        .orElse(null);
+  }
+
+  /**
+   * Parse given text to find End of <b>incomplete</b> HTML tag
+   *
+   * @param text given text
+   * @return TextRange of incomplete HTML tag inside text
+   */
+  @Nullable
+  public static TextRange getIncompleteHtmlTagEnd(String text) {
+    return getElementsInText(text, HTML_INCOMPLETE_TAG_END)
+        .stream()
+        .filter(range -> range.getStartOffset() == 0)
+        .findAny()
+        .orElse(null);
+  }
+
   @NotNull
-  private static List<TextRange> getCombinedElementsInText(String text, Pattern pattern) {
+  private static List<TextRange> getCombinedElementsInText(String text, @NotNull Pattern pattern) {
     Stack<TextRange> result = new Stack<>();
     Matcher matcher = pattern.matcher(text);
     int start;
@@ -51,13 +87,16 @@ public class JdcrStringUtils {
   }
 
   @NotNull
-  private static List<TextRange> getElementsInText(String text, Pattern pattern) {
-    List<TextRange> result = new ArrayList<>();
+  private static List<TextRange> getElementsInText(String text, @NotNull Pattern pattern) {
     Matcher matcher = pattern.matcher(text);
-    while (matcher.find()) {
-      result.add(new TextRange(matcher.start(), matcher.end()));
+    if (matcher.find()) {
+      List<TextRange> result = new ArrayList<>();
+      do {
+        result.add(new TextRange(matcher.start(), matcher.end()));
+      } while (matcher.find());
+      return result;
     }
-    return result;
+    return EMPTY_ARRAY;
   }
 
   private static final int EMPTY_INDEX = -2;
@@ -67,36 +106,41 @@ public class JdcrStringUtils {
    * Parse given text to find given HTML tags
    *
    * @param text text to parse
-   * @param tagsToFind HTML tags to search for
-   * @return list of TextRange of HTML tag's values inside text if any
+   * @param tag HTML tag to search for
+   * @return list of TextRange of HTML tag's values inside text if any or {@link #EMPTY_ARRAY}. If
+   *     open or close tag not found: Range to the end / from beginning of {@code text} added (to
+   *     search in "upper" method for close/open tag in next siblings).
    */
   @NotNull
-  public static List<TextRange> getTextRangesForHtmlTagValues(@NotNull String text, @NotNull List<Tag> tagsToFind) {
+  public static List<TextRange> getValuesOfTag(@NotNull String text, @NotNull Tag tag) {
     List<TextRange> foundHtmlTags = getHtmlTags(text);
     if (foundHtmlTags.isEmpty()) {
       return EMPTY_ARRAY;
     }
     List<TextRange> result = new ArrayList<>();
     int start = EMPTY_INDEX, end = EMPTY_INDEX;
-    for (Tag tag : tagsToFind) {
-      for (TextRange textRange : foundHtmlTags) {
-        if (textRange.substring(text).contains(tag.open)) {
-          start = textRange.getEndOffset();
-        }
-        if (textRange.substring(text).contains(tag.close)) {
-          end = textRange.getStartOffset();
-        }
-        if (start != EMPTY_INDEX && end != EMPTY_INDEX && start < end) {
-          //        assert start <= end : "Start="+start+" End="+end+" at: "+element.getText();
-          TextRange newTextRange = new TextRange(start, end);
-          // exclude dublicates
-          if (result.stream().noneMatch(it -> it.contains(newTextRange))) {
-            result.add(newTextRange);
-          }
-          start = EMPTY_INDEX;
-          end = EMPTY_INDEX;
-        }
+    for (TextRange textRange : foundHtmlTags) {
+      if (textRange.substring(text).replace(" ", "").contains(tag.open)) {
+        start = textRange.getEndOffset();
       }
+      if (textRange.substring(text).replace(" ", "").contains(tag.close)) {
+        end = textRange.getStartOffset();
+      }
+      if (start != EMPTY_INDEX && end != EMPTY_INDEX && start < end) {
+        //        assert start <= end : "Start="+start+" End="+end+" at: "+element.getText();
+        result.add(new TextRange(start, end));
+        start = EMPTY_INDEX;
+        end = EMPTY_INDEX;
+      }
+      // possible end of multiline tag
+      if (end != EMPTY_INDEX && start == EMPTY_INDEX) {
+        result.add(new TextRange(0, end));
+        end = EMPTY_INDEX;
+      }
+    }
+    // possible start of multiline tag
+    if (start != EMPTY_INDEX && end == EMPTY_INDEX) {
+      result.add(new TextRange(start, text.length()));
     }
     return result;
   }
