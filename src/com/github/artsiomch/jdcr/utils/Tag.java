@@ -4,11 +4,28 @@ import org.jetbrains.annotations.NotNull;
 
 public class Tag {
 
+  @NotNull private String open;
+  @NotNull private String close;
+
   public Tag(@NotNull String openTag, @NotNull String closeTag) {
-    this.open = openTag.replace(" ","");
-    this.close = closeTag.replace(" ","");
+    this.open = removeWS(openTag);
+    this.close = removeWS(closeTag);
   }
 
-  @NotNull public String open;
-  @NotNull public String close;
+  public boolean openIn(@NotNull String text){
+    return removeWS(text).contains(this.open);
+  }
+
+  public boolean closeIn(@NotNull String text){
+    return removeWS(text).contains(this.close);
+  }
+
+  @NotNull
+  private String removeWS(@NotNull String text){
+    StringBuilder result = new StringBuilder();
+    for (char c : text.toCharArray()) {
+        if (c!=' ') result.append(c);
+    }
+    return result.toString();
+  }
 }

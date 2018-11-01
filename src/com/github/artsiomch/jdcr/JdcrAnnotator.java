@@ -152,12 +152,12 @@ public class JdcrAnnotator implements Annotator {
         if (tagValueStart == -1) {
           // Check for Multi-line tag.
           LinkedList<TextRange> multiLineTag = JdcrPsiTreeUtils.getMultiLineTag(inspectingElement);
-          if (multiLineTag
-              .stream()
-              .map(range -> range.substring(parent.getText()))
-              .reduce("", String::concat)
-              .replace(" ", "")
-              .contains(tag.open)) {
+          String multiLineTagText =
+              multiLineTag
+                  .stream()
+                  .map(range -> range.substring(parent.getText()))
+                  .reduce("", String::concat);
+          if (tag.openIn(multiLineTagText)) {
             tagValueStart = multiLineTag.getLast().getEndOffset();
           }
         }

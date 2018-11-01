@@ -140,10 +140,10 @@ public class JdcrStringUtils {
     List<TextRange> result = new ArrayList<>();
     int start = EMPTY_INDEX, end = EMPTY_INDEX;
     for (TextRange textRange : foundHtmlTags) {
-      if (textRange.substring(text).replace(" ", "").contains(tag.open)) {
+      if (tag.openIn(textRange.substring(text))) {
         start = textRange.getEndOffset();
       }
-      if (textRange.substring(text).replace(" ", "").contains(tag.close)) {
+      if (tag.closeIn(textRange.substring(text))) {
         end = textRange.getStartOffset();
       }
       if (start != EMPTY_INDEX && end != EMPTY_INDEX && start < end) {
