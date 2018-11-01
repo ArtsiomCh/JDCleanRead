@@ -31,8 +31,6 @@ public class JdcrAnnotator implements Annotator {
 
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
-    // todo: Do we need this check?
-    //if (!JdcrPsiTreeUtils.isJavaDocElement(element)) return;
     this.holder = holder;
 
     if (element instanceof PsiDocToken
@@ -66,20 +64,15 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateLinkAnnotations(@NotNull PsiDocMethodOrFieldRef element) {
-    holder
-        .createInfoAnnotation(
-            new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()), null)
-        .setTextAttributes(JdcrColorSettingsPage.LINK_TAG);
+    doAnnotate(
+        new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()),
+        JdcrColorSettingsPage.LINK_TAG);
   }
 
   private void annotateCodeAnnotations(@NotNull PsiInlineDocTag element) {
     Arrays.stream(element.getDataElements())
-        .filter(it -> it.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
-        .forEach(
-            psiElement ->
-                holder
-                    .createInfoAnnotation(psiElement, null)
-                    .setTextAttributes(JdcrColorSettingsPage.CODE_TAG));
+        .filter(dataElm -> dataElm.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
+        .forEach(commentData -> doAnnotate(commentData, JdcrColorSettingsPage.CODE_TAG));
   }
 
   private void annotateMultiLineTag(@NotNull PsiDocToken element) {
@@ -87,14 +80,13 @@ public class JdcrAnnotator implements Annotator {
     JdcrPsiTreeUtils.getMultiLineTag(element)
         .forEach(
             range ->
-                holder
-                    .createInfoAnnotation(
-                        range.shiftRight(parent.getTextRange().getStartOffset()), null)
-                    .setTextAttributes(DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP));
+                doAnnotate(
+                    range.shiftRight(parent.getTextRange().getStartOffset()),
+                    DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP));
   }
 
   private void annotateTag(
-      @NotNull PsiDocToken element, Tag tag, TextAttributesKey textAttributesKey) {
+      @NotNull PsiDocToken element, Tag tag, @NotNull TextAttributesKey textAttributesKey) {
 
     for (TextRange tagValue : JdcrStringUtils.getValuesOfTag(element.getText(), tag)) {
 
@@ -107,20 +99,25 @@ public class JdcrAnnotator implements Annotator {
                   element.getParent(), new TextRange(tagValueStart, tagValueEnd))
               .forEach(
                   range ->
-                      holder
-                          .createInfoAnnotation(
-                              range.shiftRight(element.getParent().getTextRange().getStartOffset()),
-                              null)
-                          .setTextAttributes(textAttributesKey));
+                      doAnnotate(
+                          range.shiftRight(element.getParent().getTextRange().getStartOffset()),
+                          textAttributesKey));
         }
       } else if (tagValue.getEndOffset() != element.getTextLength()) {
         // don't annotate lonely open tag, should be covered in above case
-        holder
-            .createInfoAnnotation(
-                tagValue.shiftRight(element.getTextRange().getStartOffset()), null)
-            .setTextAttributes(textAttributesKey);
+        doAnnotate(tagValue.shiftRight(element.getTextRange().getStartOffset()), textAttributesKey);
       }
     }
+  }
+
+  private void doAnnotate(
+      @NotNull TextRange absoluteRange, @NotNull TextAttributesKey textAttributesKey) {
+    holder.createInfoAnnotation(absoluteRange, null).setTextAttributes(textAttributesKey);
+  }
+
+  private void doAnnotate(
+      @NotNull PsiElement element, @NotNull TextAttributesKey textAttributesKey) {
+    holder.createInfoAnnotation(element, null).setTextAttributes(textAttributesKey);
   }
 
   /**
