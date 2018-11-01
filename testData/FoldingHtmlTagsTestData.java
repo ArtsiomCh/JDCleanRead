@@ -4,7 +4,7 @@
  * normal and <fold text=''><code></fold>code<fold text=''></code></fold> text
  * normal and <fold text=''><tt></fold>tt<fold text=''></tt></fold> text
  * nested tags: <fold text=''><b><i></fold>bold-italic<fold text=''></i></b></fold>
- *
+ * <!-- not a tag -->
  * milti line a href tag <fold text=''><a </fold>
  *<fold text=''> href=</fold>
  *<fold text=''> "www"></fold> with multiline

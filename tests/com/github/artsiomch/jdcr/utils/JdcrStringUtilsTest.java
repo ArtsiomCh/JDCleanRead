@@ -56,7 +56,19 @@ public class JdcrStringUtilsTest {
     assertEquals(text, 11, incompleteHtmlTag.getStartOffset());
     assertEquals(text, 26, incompleteHtmlTag.getEndOffset());
 
+    text = "full <tag> and incomplete <tag start test";
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagStart(text);
+    assertNotNull(text, incompleteHtmlTag);
+    assertEquals(text, 26, incompleteHtmlTag.getStartOffset());
+    assertEquals(text, 41, incompleteHtmlTag.getEndOffset());
+
     text = "incomplete tag> end test";
+    incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagEnd(text);
+    assertNotNull(text, incompleteHtmlTag);
+    assertEquals(text, 0, incompleteHtmlTag.getStartOffset());
+    assertEquals(text, 15, incompleteHtmlTag.getEndOffset());
+
+    text = "incomplete tag> end full <tag> test";
     incompleteHtmlTag = JdcrStringUtils.getIncompleteHtmlTagEnd(text);
     assertNotNull(text, incompleteHtmlTag);
     assertEquals(text, 0, incompleteHtmlTag.getStartOffset());

@@ -53,11 +53,22 @@ public class JdcrStringUtils {
    */
   @Nullable
   public static TextRange getIncompleteHtmlTagEnd(String text) {
-    return getElementsInText(text, HTML_INCOMPLETE_TAG_END)
-        .stream()
-        .filter(range -> range.getStartOffset() == 0)
-        .findAny()
-        .orElse(null);
+    // Pre-filtering. See http://www.fasterj.com/articles/regex2.shtml
+    // todo: Rid of regexp at all?
+    int tagEndIndex = text.indexOf('>');
+    if (tagEndIndex != -1) {
+      int tagStartIndex = text.indexOf('<');
+      if (tagStartIndex == -1 || tagStartIndex > tagEndIndex) {
+
+        return getElementsInText(text, HTML_INCOMPLETE_TAG_END)
+            .stream()
+            .filter(range -> range.getStartOffset() == 0)
+            .findAny()
+            .orElse(null);
+        //        return new TextRange(0, tagEndIndex);
+      }
+    }
+    return null;
   }
 
   @NotNull
@@ -92,6 +103,15 @@ public class JdcrStringUtils {
     if (matcher.find()) {
       List<TextRange> result = new ArrayList<>();
       do {
+        assert matcher.start() < matcher.end()
+            : "matcher.start()="
+                + matcher.start()
+                + " matcher.end()="
+                + matcher.end()
+                + "  text: "
+                + text
+                + "pattern: "
+                + matcher.pattern().pattern();
         result.add(new TextRange(matcher.start(), matcher.end()));
       } while (matcher.find());
       return result;
