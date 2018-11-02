@@ -4,6 +4,8 @@
  * normal and <code><info descr="null">code</info></code> text
  * normal and <tt><info descr="null">tt</info></tt> text
  * html link <a href="http://www.jetbrains.org"><info descr="null">JetBrains</info></a>
+ * <a link="">NOT valid link tag</a>
+ * <a name="ooo"><info descr="null">not a html link but a_name tag</info></a>
  * {@code<info descr="null"> code_tag</info>}
  * {@code<info descr="null"> <b>not_bold</b></info>}
  * {@code<info descr="null"> multiline</info>
@@ -14,6 +16,10 @@
  * inline <b><info descr="null">bold tag </info></b> and multiline <b><info descr="null"> bold </info>
  *<info descr="null"> tag</info></b> with another multiline <b><info descr="null"> bold </info>
  *<info descr="null"> tag</info></b> with inline <b><info descr="null">bold tag</info></b>.
+ *
+ * multiline tag start <info descr="null"><b </info>
+ *<info descr="null"> ></info><info descr="null"> with multiline end </info><info descr="null"></b </info>
+ *<info descr="null"> ></info>
  *
  * milti line href tag <info descr="null"><a </info>
  *<info descr="null"> href=</info>

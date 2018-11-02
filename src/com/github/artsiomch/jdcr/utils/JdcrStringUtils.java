@@ -52,7 +52,7 @@ public class JdcrStringUtils {
    * @return TextRange of incomplete HTML tag inside text
    */
   @Nullable
-  public static TextRange getIncompleteHtmlTagEnd(String text) {
+  public static TextRange getIncompleteHtmlTagEnd(@NotNull String text) {
     // Pre-filtering. See http://www.fasterj.com/articles/regex2.shtml
     // todo: Rid of regexp at all?
     int tagEndIndex = text.indexOf('>');
@@ -129,7 +129,7 @@ public class JdcrStringUtils {
    * @param tag HTML tag to search for
    * @return list of TextRange of HTML tag's values inside text if any or {@link #EMPTY_ARRAY}. If
    *     open or close tag not found: Range to the end / from beginning of {@code text} added (to
-   *     search in "upper" method for close/open tag in next siblings).
+   *     search in "upper" method for close/open tag in siblings).
    */
   @NotNull
   public static List<TextRange> getValuesOfTag(@NotNull String text, @NotNull Tag tag) {

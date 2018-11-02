@@ -114,7 +114,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
             });
 
     // Check for Multi-line tag.
-    JdcrPsiTreeUtils.getMultiLineTag(psiDocToken)
+    JdcrPsiTreeUtils.getMultiLineTagRangesInParent(psiDocToken)
         .forEach(textRange -> addFoldingDescriptor(psiDocToken.getParent(), textRange));
 
     JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())
@@ -133,6 +133,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
   private void addFoldingDescriptor(
       @NotNull PsiElement element, @NotNull TextRange range, String placeholderText) {
 
+    // reducing folding regions amount by joint sequential regions into one: <i><b>...
     TextRange absoluteNewRange = range.shiftRight(element.getTextRange().getStartOffset());
     if (!foldingDescriptors.empty()
         && foldingDescriptors.peek().getRange().getEndOffset()

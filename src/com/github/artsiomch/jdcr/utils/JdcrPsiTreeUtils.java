@@ -98,13 +98,15 @@ public class JdcrPsiTreeUtils {
   private static final LinkedList<TextRange> EMPTY_LIST = new LinkedList<>();
 
   /**
-   * Check element for incomplete HTML Tag end (lonely `{@code >}`) by parsing previous Siblings.
+   * Check element for incomplete HTML Tag <b>end</b> (lonely `{@code >}`) and look behind for
+   * incomplete HTML Tag <b>start</b> (lonely `{@code <}`) by parsing previous Siblings.
    *
    * @param psiDocToken element to check
    * @return {@link TextRange}s (<i>relatively</i> to {@code psiDocToken.getParent()} element) of
    *     full multiline HTML Tag, excluding service elements (leading asterisks, etc).
    */
-  public static LinkedList<TextRange> getMultiLineTag(@NotNull PsiElement psiDocToken) {
+  public static LinkedList<TextRange> getMultiLineTagRangesInParent(
+      @NotNull PsiElement psiDocToken) {
     TextRange incompleteHtmlTagEnd = JdcrStringUtils.getIncompleteHtmlTagEnd(psiDocToken.getText());
     if (incompleteHtmlTagEnd != null) {
       LinkedList<TextRange> rangesToFold = new LinkedList<>();
@@ -132,9 +134,8 @@ public class JdcrPsiTreeUtils {
   }
 
   /**
-   * Recursive (depth first) search for all elements of given {@code class}.
-   * Don't use it. Use {@link com.intellij.psi.util.PsiTreeUtil#findChildrenOfType(PsiElement,
-   * Class)}.
+   * Recursive (depth first) search for all elements of given {@code class}. Don't use it. Use
+   * {@link com.intellij.psi.util.PsiTreeUtil#findChildrenOfType(PsiElement, Class)}.
    *
    * @param element a PSI element to start search from.
    * @param clazz element type to search for.
