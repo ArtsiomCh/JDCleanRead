@@ -14,6 +14,7 @@ import com.intellij.psi.javadoc.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,23 +71,36 @@ public class JdcrPsiTreeUtils {
    * Look inside {@code range} in JavaDoc {@code element} for line breaks
    *
    * @param element
-   * @param range
+   * @param range inside <tt>element</tt> to check
    * @return List of TextRanges relative to {@code element} between line breaks inside {@code range}
    */
-  public static List<TextRange> excludeLineBreaks(
+  public static LinkedList<TextRange> excludeLineBreaks(
       @NotNull PsiElement element, @NotNull TextRange range) {
-    List<TextRange> result = new LinkedList<>();
+    LinkedList<TextRange> result = new LinkedList<>();
     int prevLineBreak = range.getStartOffset();
-    for (PsiElement ws : element.getChildren()) {
-      if (ws instanceof PsiWhiteSpace
-          && ws.getNextSibling() != null
-          && ws.getNextSibling().getNode().getElementType()
-              == JavaDocTokenType.DOC_COMMENT_LEADING_ASTERISKS
-          && range.contains(ws.getStartOffsetInParent())) {
-        if (ws.getStartOffsetInParent() > prevLineBreak) {
-          result.add(new TextRange(prevLineBreak, ws.getStartOffsetInParent()));
+    for (PsiElement child : element.getChildren()) {
+      if (range.contains(child.getStartOffsetInParent())) {
+        if (child instanceof PsiWhiteSpace
+            && child.getNextSibling() != null
+            && child.getNextSibling().getNode().getElementType()
+                == JavaDocTokenType.DOC_COMMENT_LEADING_ASTERISKS) {
+          // new line PsiWhiteSpace element found
+          if (child.getStartOffsetInParent() > prevLineBreak) {
+            result.add(new TextRange(prevLineBreak, child.getStartOffsetInParent()));
+          }
+          prevLineBreak = child.getNextSibling().getStartOffsetInParent() + 1;
+        } else if (child instanceof PsiDocTag) {
+          // break nested elements
+          LinkedList<TextRange> subElementRanges = new LinkedList<>();
+          for (TextRange nestedRange :
+              excludeLineBreaks(child, new TextRange(0, child.getTextLength()))) {
+            subElementRanges.add(nestedRange.shiftRight(child.getStartOffsetInParent()));
+          }
+          if (!subElementRanges.isEmpty()) {
+            result.addAll(subElementRanges);
+            prevLineBreak = subElementRanges.getLast().getEndOffset();
+          }
         }
-        prevLineBreak = ws.getNextSibling().getStartOffsetInParent() + 1;
       }
     }
     if (prevLineBreak < range.getEndOffset()) {
