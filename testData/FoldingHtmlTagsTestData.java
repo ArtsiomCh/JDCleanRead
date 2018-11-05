@@ -6,10 +6,10 @@
  * nested tags: <fold text=''><b><i></fold>bold-italic<fold text=''></i></b></fold>
  * <!-- not a tag -->
  * milti line a href tag <fold text=''><a </fold>
- *<fold text=''> href=</fold>
- *<fold text=''> "www"></fold> with multiline
+ * <fold text=''>href=</fold>
+ * <fold text=''>"www"></fold> with multiline
  * tag value <fold text=''></a></fold> with another milti line href tag <fold text=''><a </fold>
- *<fold text=''> href="ttt"></fold> a tag value <fold text=''></a></fold>
+ * <fold text=''>href="ttt"></fold> a tag value <fold text=''></a></fold>
  */</fold>
 
 

@@ -77,9 +77,15 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateCodeAnnotations(@NotNull PsiInlineDocTag element) {
-    Arrays.stream(element.getDataElements())
-        .filter(dataElm -> dataElm.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA)
-        .forEach(commentData -> doAnnotate(commentData, JdcrColorSettingsPage.CODE_TAG));
+    JdcrPsiTreeUtils.excludeLineBreaks(
+            element,
+            new TextRange(
+                2 /* {@ */ + element.getName().length(), element.getTextLength() - 1 /* } */))
+        .forEach(
+            eachLineRange ->
+                doAnnotate(
+                    eachLineRange.shiftRight(element.getTextRange().getStartOffset()),
+                    JdcrColorSettingsPage.CODE_TAG));
   }
 
   private void annotateMultiLineTag(@NotNull PsiDocToken element) {
@@ -134,7 +140,7 @@ public class JdcrAnnotator implements Annotator {
    * @param element to start from
    * @param tag to check
    * @param tagValueStartInParent offset <i>relatively</i> to {@code element.getParent()}
-   * @return ranges of Tag Value <i>relatively</i> to {@code element.getParent()}
+   * @return absolute ranges of Tag Value
    */
   private List<TextRange> getTagValueRanges(
       @NotNull PsiDocToken element, Tag tag, int tagValueStartInParent) {
@@ -183,10 +189,5 @@ public class JdcrAnnotator implements Annotator {
   private void doAnnotate(
       @NotNull TextRange absoluteRange, @NotNull TextAttributesKey textAttributesKey) {
     holder.createInfoAnnotation(absoluteRange, null).setTextAttributes(textAttributesKey);
-  }
-
-  private void doAnnotate(
-      @NotNull PsiElement element, @NotNull TextAttributesKey textAttributesKey) {
-    holder.createInfoAnnotation(element, null).setTextAttributes(textAttributesKey);
   }
 }

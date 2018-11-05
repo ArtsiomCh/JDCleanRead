@@ -85,10 +85,14 @@ public class JdcrPsiTreeUtils {
             && child.getNextSibling().getNode().getElementType()
                 == JavaDocTokenType.DOC_COMMENT_LEADING_ASTERISKS) {
           // new line PsiWhiteSpace element found
-          if (child.getStartOffsetInParent() > prevLineBreak) {
-            result.add(new TextRange(prevLineBreak, child.getStartOffsetInParent()));
+          PsiElement ws = child;
+          PsiElement leadingAsterisks = ws.getNextSibling();
+          if (ws.getStartOffsetInParent() > prevLineBreak) {
+            result.add(new TextRange(prevLineBreak, ws.getStartOffsetInParent()));
           }
-          prevLineBreak = child.getNextSibling().getStartOffsetInParent() + 1;
+          prevLineBreak =
+              leadingAsterisks.getStartOffsetInParent()
+                  + leadingAsterisks.getTextLength() /*length of '*'s */;
         } else if (child instanceof PsiDocTag) {
           // break nested elements
           LinkedList<TextRange> subElementRanges = new LinkedList<>();
@@ -106,6 +110,20 @@ public class JdcrPsiTreeUtils {
     if (prevLineBreak < range.getEndOffset()) {
       result.add(new TextRange(prevLineBreak, range.getEndOffset()));
     }
+    return removeLeadingSpace(element, result);
+  }
+
+  // don't include ' ' at the begging of line (after leading asterisks) if any.
+  private static LinkedList<TextRange> removeLeadingSpace(
+      @NotNull PsiElement element, @NotNull LinkedList<TextRange> ranges) {
+    LinkedList<TextRange> result = new LinkedList<>();
+    for (TextRange range : ranges) {
+      if (range.substring(element.getText()).charAt(0) == ' '
+          && element.getText().charAt(range.getStartOffset() - 1) == '*') {
+        if (range.getLength() > 1) // hack to avoid 0 length TextRange
+          result.add(new TextRange(range.getStartOffset() + 1, range.getEndOffset()));
+      } else result.add(range);
+    }
     return result;
   }
 
@@ -115,30 +133,29 @@ public class JdcrPsiTreeUtils {
    * Check element for incomplete HTML Tag <b>end</b> (lonely `{@code >}`) and look behind for
    * incomplete HTML Tag <b>start</b> (lonely `{@code <}`) by parsing previous Siblings.
    *
-   * @param psiDocToken element to check
-   * @return {@link TextRange}s (<i>relatively</i> to {@code psiDocToken.getParent()} element) of
-   *     full multiline HTML Tag, excluding service elements (leading asterisks, etc).
+   * @param element element to check
+   * @return {@link TextRange}s (<i>relatively</i> to {@code element.getParent()} element) of full
+   *     multiline HTML Tag, excluding service elements (leading asterisks, etc).
    */
-  public static LinkedList<TextRange> getMultiLineTagRangesInParent(
-      @NotNull PsiElement psiDocToken) {
-    TextRange incompleteHtmlTagEnd = JdcrStringUtils.getIncompleteHtmlTagEnd(psiDocToken.getText());
+  public static LinkedList<TextRange> getMultiLineTagRangesInParent(@NotNull PsiElement element) {
+    TextRange incompleteHtmlTagEnd = JdcrStringUtils.getIncompleteHtmlTagEnd(element.getText());
     if (incompleteHtmlTagEnd != null) {
-      LinkedList<TextRange> rangesToFold = new LinkedList<>();
-      rangesToFold.add(incompleteHtmlTagEnd.shiftRight(psiDocToken.getStartOffsetInParent()));
+      LinkedList<TextRange> foundRangesInParent = new LinkedList<>();
+      foundRangesInParent.add(incompleteHtmlTagEnd.shiftRight(element.getStartOffsetInParent()));
 
       // Look behind for tag start.
-      PsiElement prevSibling = psiDocToken.getPrevSibling();
+      PsiElement prevSibling = element.getPrevSibling();
       while (prevSibling != null) {
         if (prevSibling.getNode().getElementType() == JavaDocTokenType.DOC_COMMENT_DATA
             || prevSibling instanceof PsiInlineDocTag) {
           TextRange incompleteHtmlTagStart =
               JdcrStringUtils.getIncompleteHtmlTagStart(prevSibling.getText());
           if (incompleteHtmlTagStart == null) {
-            rangesToFold.addFirst(prevSibling.getTextRangeInParent());
+            foundRangesInParent.addFirst(prevSibling.getTextRangeInParent());
           } else {
-            rangesToFold.addFirst(
+            foundRangesInParent.addFirst(
                 incompleteHtmlTagStart.shiftRight(prevSibling.getStartOffsetInParent()));
-            return rangesToFold;
+            return removeLeadingSpace(element.getParent(), foundRangesInParent);
           }
         }
         prevSibling = prevSibling.getPrevSibling();
