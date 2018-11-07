@@ -67,8 +67,8 @@ public class JdcrAnnotator implements Annotator {
         // Annotate <a name=...> tags
         annotateTagValue(A_NAME_TAG, JdcrColorSettingsPage.BOLD_FONT);
 
-        // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
-        annotateMultiLineTag();
+        // Annotate Html Tags (including multiline Tags)
+        annotateHtmlTags();
       }
 
     } else if (element instanceof PsiInlineDocTag
@@ -100,19 +100,25 @@ public class JdcrAnnotator implements Annotator {
                     JdcrColorSettingsPage.CODE_TAG));
   }
 
-  // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
-  private void annotateMultiLineTag() {
-    for (TextRange range : multiLineTagRangesInParent) {
+  private void annotateHtmlTags() {
+    for (TextRange range : foundHtmlTags) {
       doAnnotate(
-          range.shiftRight(element.getParent().getTextRange().getStartOffset()),
-          DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
+          range.shiftRight(element.getTextRange().getStartOffset()),
+          JdcrColorSettingsPage.BORDERED);
+    }
+    // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
+    for (TextRange range : multiLineTagRangesInParent) {
+      range = range.shiftRight(element.getParent().getTextRange().getStartOffset());
+      doAnnotate(range, DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
+      doAnnotate(range, JdcrColorSettingsPage.BORDERED);
     }
   }
 
   private void annotateTagValue(Tag tag, @NotNull TextAttributesKey textAttributesKey) {
     ArrayList<TextRange> rangesToAnnotate = new ArrayList<>();
 
-    for (TextRange tagValue : JdcrStringUtils.getValuesOfTag(element.getText(), tag, foundHtmlTags)) {
+    for (TextRange tagValue :
+        JdcrStringUtils.getValuesOfTag(element.getText(), tag, foundHtmlTags)) {
       if (tagValue.getEndOffset() == element.getTextLength()) {
         // lonely open tag found withing current PsiDocToken
         // possible start of multiline value of tag.

@@ -4,13 +4,11 @@ import com.intellij.lang.java.JavaLanguage;
 import com.intellij.lang.java.JavaSyntaxHighlighterFactory;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
-import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
 import com.intellij.util.containers.ContainerUtil;
-import java.awt.Font;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,17 +28,11 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
           "html link tag", DefaultLanguageHighlighterColors.NUMBER);
 
   public static final TextAttributesKey BOLD_FONT =
-      TextAttributesKey.createTextAttributesKey("bold font", createBoldTextAttributes());
+      TextAttributesKey.createTextAttributesKey("MY_BOLD");
   public static final TextAttributesKey ITALIC_FONT =
-      TextAttributesKey.createTextAttributesKey("italic font", createBoldTextAttributes());
-
-  private static TextAttributes createBoldTextAttributes() {
-    TextAttributes textAttributes =
-        DefaultLanguageHighlighterColors.DOC_COMMENT.getDefaultAttributes().clone();
-    /** Set or revert FontType. See {@link Font} */
-    textAttributes.setFontType(textAttributes.getFontType() ^ Font.BOLD);
-    return textAttributes;
-  }
+      TextAttributesKey.createTextAttributesKey("MY_ITALIC");
+  public static final TextAttributesKey BORDERED =
+      TextAttributesKey.createTextAttributesKey("MY_BORDERED");
 
   private static final AttributesDescriptor[] DESCRIPTORS =
       new AttributesDescriptor[] {
@@ -48,7 +40,8 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
         new AttributesDescriptor("Tag value of html link: <a href=...>...</a>", HTML_LINK_TAG),
         new AttributesDescriptor("Tag value of: @link", LINK_TAG),
         new AttributesDescriptor("Tag value of: <b> | <a name=...>", BOLD_FONT),
-        new AttributesDescriptor("Tag value of: <i> | <em>", ITALIC_FONT)
+        new AttributesDescriptor("Tag value of: <i> | <em>", ITALIC_FONT),
+        new AttributesDescriptor("Html Tag additional Mark Up", BORDERED)
       };
 
   @Nullable
@@ -67,10 +60,14 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
   @Override
   public String getDemoText() {
     return "/**\n"
-        + " * To convert any <tt><_code>object</_code></tt> of {@code <_code>Object</_code>} class to <code><_code>String</_code></code> use \n"
+        + " * To convert any <_bor><tt></_bor><_code>object</_code><_bor></tt></_bor> of "
+        + "{@code <_code>Object</_code>} class to "
+        + "<_bor><code></_bor><_code>String</_code><_bor></code></_bor> use \n"
         + " * {@link java.lang.Object#<_link>toString()</_link> toString()} method.\n"
-        + " * html link <a href=\"http://www.jetbrains.org\"><_a>JetBrains</_a></a>.\n"
-        + " * <b><_b>bold text</_b></b> and <i><_i>italic text</_i></i>.\n"
+        + " * html link <_bor><a href=\"http://www.jetbrains.org\"></_bor>"
+        + "<_a>JetBrains</_a><_bor></a></_bor>.\n"
+        + " * <_bor><b></_bor><_b>bold text</_b><_bor></b></_bor> "
+        + "and <_bor><i></_bor><_i>italic text</_i><_bor></i></_bor>.\n"
         + " */";
   }
 
@@ -78,8 +75,8 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
   @Override
   public Map<String, TextAttributesKey> getAdditionalHighlightingTagToDescriptorMap() {
     return ContainerUtil.newHashMap(
-        Arrays.asList("_code", "_link", "_a", "_b", "_i"),
-        Arrays.asList(CODE_TAG, LINK_TAG, HTML_LINK_TAG, BOLD_FONT, ITALIC_FONT));
+        Arrays.asList("_code", "_link", "_a", "_b", "_i", "_bor"),
+        Arrays.asList(CODE_TAG, LINK_TAG, HTML_LINK_TAG, BOLD_FONT, ITALIC_FONT, BORDERED));
   }
 
   @NotNull

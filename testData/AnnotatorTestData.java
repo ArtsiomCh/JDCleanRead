@@ -1,11 +1,11 @@
 /**
- * normal and <b><info descr="null">bold</info></b> text
- * normal and <i><info descr="null">italic</info></i> text
- * normal and <code><info descr="null">code</info></code> text
- * normal and <tt><info descr="null">tt</info></tt> text
- * html link <a href="http://www.jetbrains.org"><info descr="null">JetBrains</info></a>
- * <a link="">NOT valid link tag</a>
- * <a name="ooo"><info descr="null">not a html link but a_name tag</info></a>
+ * normal and <info descr="null"><b></info><info descr="null">bold</info><info descr="null"></b></info> text
+ * normal and <info descr="null"><i></info><info descr="null">italic</info><info descr="null"></i></info> text
+ * normal and <info descr="null"><code></info><info descr="null">code</info><info descr="null"></code></info> text
+ * normal and <info descr="null"><tt></info><info descr="null">tt</info><info descr="null"></tt></info> text
+ * html link <info descr="null"><a href="http://www.jetbrains.org"></info><info descr="null">JetBrains</info><info descr="null"></a></info>
+ * <info descr="null"><a link=""></info>NOT valid link tag<info descr="null"></a></info>
+ * <info descr="null"><a name="ooo"></info><info descr="null">not a html link but a_name tag</info><info descr="null"></a></info>
  * {@code<info descr="null"> code_tag</info>}
  * {@code<info descr="null"> <b>not_bold</b></info>}
  * {@code<info descr="null"> multiline</info>
@@ -14,22 +14,22 @@
  * {@link #<info descr="null">link_tag</info> link_name}
  * <!-- not a tag --> jjj -->
  *
- * inline <b><info descr="null">bold tag </info></b> and multiline <b><info descr="null"> bold </info>
- * <info descr="null">tag</info></b> with another multiline <b><info descr="null"> bold tag </info>
- * </b> with inline <b><info descr="null">bold tag</info></b>.
+ * inline <info descr="null"><b></info><info descr="null">bold tag </info><info descr="null"></b></info> and multiline <info descr="null"><b></info><info descr="null"> bold </info>
+ * <info descr="null">tag</info><info descr="null"></b></info> with another multiline <info descr="null"><b></info><info descr="null"> bold tag </info>
+ * <info descr="null"></b></info> with inline <info descr="null"><b></info><info descr="null">bold tag</info><info descr="null"></b></info>.
  *
- * multiline html tag with nested javadoc tag: <pre><info descr="null">{@code</info>
+ * multiline html tag with nested javadoc tag: <info descr="null"><pre></info><info descr="null">{@code</info>
  * <info descr="null"><info descr="null">   tag body</info></info>
- * <info descr="null">}</info></pre>
+ * <info descr="null">}</info><info descr="null"></pre></info>
  *
- * multiline tag start <info descr="null"><b </info>
- * <info descr="null">></info><info descr="null"> with multiline end </info><info descr="null"></b </info>
- * <info descr="null">></info>
+ * multiline tag start <info descr="null"><info descr="null"><b </info></info>
+ * <info descr="null"><info descr="null">></info></info><info descr="null"> with multiline end </info><info descr="null"><info descr="null"></b </info></info>
+ * <info descr="null"><info descr="null">></info></info>
  *
- * milti line href tag <info descr="null"><a </info>
- * <info descr="null">href=</info>
- * <info descr="null">"www"></info><info descr="null"> with multiline </info>
- * <info descr="null">tag value </info></a>
+ * milti line href tag <info descr="null"><info descr="null"><a </info></info>
+ * <info descr="null"><info descr="null">href=</info></info>
+ * <info descr="null"><info descr="null">"www"></info></info><info descr="null"> with multiline </info>
+ * <info descr="null">tag value </info><info descr="null"></a></info>
  */
 
 public class AnnotatorTestData {
