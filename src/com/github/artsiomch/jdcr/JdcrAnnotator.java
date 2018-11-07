@@ -19,10 +19,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-
 public class JdcrAnnotator implements Annotator {
+
   private AnnotationHolder holder;
+  private PsiElement element;
+  private List<TextRange> foundHtmlTags = EMPTY_ARRAY;
+  private LinkedList<TextRange> multiLineTagRangesInParent = EMPTY_LIST;
 
   private static final Tag CODE_TAG = new Tag("<code>", "</code>");
   private static final Tag TT_TAG = new Tag("<tt>", "</tt>");
@@ -33,54 +35,64 @@ public class JdcrAnnotator implements Annotator {
   private static final Tag ITALIC_TAG = new Tag("<i>", "</i>");
   private static final Tag EM_TAG = new Tag("<em>", "</em>");
 
+  private static final List<TextRange> EMPTY_ARRAY = new ArrayList<>();
+  private static final LinkedList<TextRange> EMPTY_LIST = new LinkedList<>();
+
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
     this.holder = holder;
+    this.element = element;
 
     if (element instanceof PsiDocToken
         && ((PsiDocToken) element).getTokenType() == JavaDocTokenType.DOC_COMMENT_DATA
         && !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag((PsiDocToken) element)) {
 
-      // Annotate Font style HTML tags
-      annotateTag((PsiDocToken) element, BOLD_TAG, JdcrColorSettingsPage.BOLD_FONT);
-      annotateTag((PsiDocToken) element, ITALIC_TAG, JdcrColorSettingsPage.ITALIC_FONT);
-      annotateTag((PsiDocToken) element, EM_TAG, JdcrColorSettingsPage.ITALIC_FONT);
+      foundHtmlTags = JdcrStringUtils.getHtmlTags(element.getText());
+      multiLineTagRangesInParent = JdcrPsiTreeUtils.getMultiLineTagRangesInParent(element);
+      if (!foundHtmlTags.isEmpty() || !multiLineTagRangesInParent.isEmpty()) {
 
-      // Annotate Code HTML tags
-      annotateTag((PsiDocToken) element, CODE_TAG, JdcrColorSettingsPage.CODE_TAG);
-      annotateTag((PsiDocToken) element, TT_TAG, JdcrColorSettingsPage.CODE_TAG);
-      annotateTag((PsiDocToken) element, PRE_TAG, JdcrColorSettingsPage.CODE_TAG);
+        // Annotate Font style HTML tags
+        annotateTagValue(BOLD_TAG, JdcrColorSettingsPage.BOLD_FONT);
+        annotateTagValue(ITALIC_TAG, JdcrColorSettingsPage.ITALIC_FONT);
+        annotateTagValue(EM_TAG, JdcrColorSettingsPage.ITALIC_FONT);
 
-      // Annotate HTML link tags
-      annotateTag((PsiDocToken) element, A_HREF_TAG, JdcrColorSettingsPage.HTML_LINK_TAG);
+        // Annotate Code HTML tags
+        annotateTagValue(CODE_TAG, JdcrColorSettingsPage.CODE_TAG);
+        annotateTagValue(TT_TAG, JdcrColorSettingsPage.CODE_TAG);
+        annotateTagValue(PRE_TAG, JdcrColorSettingsPage.CODE_TAG);
 
-      // Annotate <a name=...> tags
-      annotateTag((PsiDocToken) element, A_NAME_TAG, JdcrColorSettingsPage.BOLD_FONT);
+        // Annotate HTML link tags
+        annotateTagValue(A_HREF_TAG, JdcrColorSettingsPage.HTML_LINK_TAG);
 
-      // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
-      annotateMultiLineTag((PsiDocToken) element);
+        // Annotate <a name=...> tags
+        annotateTagValue(A_NAME_TAG, JdcrColorSettingsPage.BOLD_FONT);
+
+        // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
+        annotateMultiLineTag();
+      }
 
     } else if (element instanceof PsiInlineDocTag
         && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
-      annotateCodeAnnotations((PsiInlineDocTag) element);
+      annotateCodeAnnotations();
 
     } else if (element instanceof PsiDocMethodOrFieldRef) { // @link @linkplain @value
-      annotateLinkAnnotations((PsiDocMethodOrFieldRef) element);
+      annotateLinkAnnotations();
     }
     this.holder = null;
+    this.element = null;
+    foundHtmlTags = EMPTY_ARRAY;
+    multiLineTagRangesInParent = EMPTY_LIST;
   }
 
-  private void annotateLinkAnnotations(@NotNull PsiDocMethodOrFieldRef element) {
+  private void annotateLinkAnnotations() {
     doAnnotate(
         new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()),
         JdcrColorSettingsPage.LINK_TAG);
   }
 
-  private void annotateCodeAnnotations(@NotNull PsiInlineDocTag element) {
+  private void annotateCodeAnnotations() {
     JdcrPsiTreeUtils.excludeLineBreaks(
-            element,
-            new TextRange(
-                2 /* {@ */ + element.getName().length(), element.getTextLength() - 1 /* } */))
+            element, new TextRange(6 /* {@code */, element.getTextLength() - 1 /* } */))
         .forEach(
             eachLineRange ->
                 doAnnotate(
@@ -88,38 +100,34 @@ public class JdcrAnnotator implements Annotator {
                     JdcrColorSettingsPage.CODE_TAG));
   }
 
-  private void annotateMultiLineTag(@NotNull PsiDocToken element) {
-    PsiElement parent = element.getParent();
-    JdcrPsiTreeUtils.getMultiLineTagRangesInParent(element)
-        .forEach(
-            range ->
-                doAnnotate(
-                    range.shiftRight(parent.getTextRange().getStartOffset()),
-                    DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP));
+  // Annotate multiline Tag, fix https://youtrack.jetbrains.com/issue/IDEA-198738
+  private void annotateMultiLineTag() {
+    for (TextRange range : multiLineTagRangesInParent) {
+      doAnnotate(
+          range.shiftRight(element.getParent().getTextRange().getStartOffset()),
+          DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
+    }
   }
 
-  private void annotateTag(
-      @NotNull PsiDocToken element, Tag tag, @NotNull TextAttributesKey textAttributesKey) {
+  private void annotateTagValue(Tag tag, @NotNull TextAttributesKey textAttributesKey) {
     ArrayList<TextRange> rangesToAnnotate = new ArrayList<>();
 
-    for (TextRange tagValue : JdcrStringUtils.getValuesOfTag(element.getText(), tag)) {
+    for (TextRange tagValue : JdcrStringUtils.getValuesOfTag(element.getText(), tag, foundHtmlTags)) {
       if (tagValue.getEndOffset() == element.getTextLength()) {
         // lonely open tag found withing current PsiDocToken
         // possible start of multiline value of tag.
         int tagValueStartInParent = tagValue.getStartOffset() + element.getStartOffsetInParent();
-        rangesToAnnotate.addAll(getTagValueRanges(element, tag, tagValueStartInParent));
+        rangesToAnnotate.addAll(getTagValueRanges(tag, tagValueStartInParent));
       } else if (tagValue.getStartOffset() != 0) {
         // don't annotate lonely close tag, should be covered in above case
         rangesToAnnotate.add(tagValue.shiftRight(element.getTextRange().getStartOffset()));
       }
     }
     // Check for Multi-line open tag.
-    LinkedList<TextRange> multiLineTagRangesInParent =
-        JdcrPsiTreeUtils.getMultiLineTagRangesInParent(element);
     if (!multiLineTagRangesInParent.isEmpty()
         && tag.openIn(getMultilineTagText(element.getParent(), multiLineTagRangesInParent))) {
       int tagValueStartInParent = multiLineTagRangesInParent.getLast().getEndOffset();
-      rangesToAnnotate.addAll(getTagValueRanges(element, tag, tagValueStartInParent));
+      rangesToAnnotate.addAll(getTagValueRanges(tag, tagValueStartInParent));
     }
 
     rangesToAnnotate.forEach(range -> doAnnotate(range, textAttributesKey));
@@ -133,17 +141,14 @@ public class JdcrAnnotator implements Annotator {
         .reduce("", String::concat);
   }
 
-  private static final List<TextRange> EMPTY_ARRAY = new ArrayList<>();
   /**
    * Look ahead for close tag.
    *
-   * @param element to start from
    * @param tag to check
    * @param tagValueStartInParent offset <i>relatively</i> to {@code element.getParent()}
    * @return absolute ranges of Tag Value
    */
-  private List<TextRange> getTagValueRanges(
-      @NotNull PsiDocToken element, Tag tag, int tagValueStartInParent) {
+  private List<TextRange> getTagValueRanges(Tag tag, int tagValueStartInParent) {
 
     int tagValueEndInParent = -1;
     PsiElement inspectingElement = element;
@@ -186,8 +191,18 @@ public class JdcrAnnotator implements Annotator {
             .collect(Collectors.toCollection(ArrayList::new));
   }
 
+  private static int countAnnotation = 0;
+
   private void doAnnotate(
       @NotNull TextRange absoluteRange, @NotNull TextAttributesKey textAttributesKey) {
     holder.createInfoAnnotation(absoluteRange, null).setTextAttributes(textAttributesKey);
+    /*
+        countAnnotation++;
+        if (countAnnotation % 1000 == 1)
+          System.out.printf("%s  %6d annotations\n",
+              LocalDateTime.now(),
+              countAnnotation
+          );
+    */
   }
 }

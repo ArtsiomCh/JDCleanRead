@@ -133,7 +133,16 @@ public class JdcrStringUtils {
    */
   @NotNull
   public static List<TextRange> getValuesOfTag(@NotNull String text, @NotNull Tag tag) {
-    List<TextRange> foundHtmlTags = getHtmlTags(text);
+    return getValuesOfTag(text, tag, getHtmlTags(text));
+  }
+
+  /**
+   * see {@link #getValuesOfTag(String, Tag)}
+   * @param foundHtmlTags pre-fetched ranges of html Tags in {@code text}
+   */
+  @NotNull
+  public static List<TextRange> getValuesOfTag(
+      @NotNull String text, @NotNull Tag tag, @NotNull List<TextRange> foundHtmlTags) {
     if (foundHtmlTags.isEmpty()) {
       return EMPTY_ARRAY;
     }

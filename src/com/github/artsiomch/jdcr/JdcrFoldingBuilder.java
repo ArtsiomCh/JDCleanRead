@@ -45,7 +45,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class)
           .forEach(this::checkInlineJavaDocTags);
     }
-//    System.out.printf("Folding time: %d\n", (System.currentTimeMillis() - startTime));
+/*
+    System.out.printf("File: %-20s  Folding time: %6d,  Total folds created: %6d\n",
+        root.getContainingFile().getName(),
+        (System.currentTimeMillis() - startTime),
+        foldingDescriptors.capacity());
+*/
     return foldingDescriptors.toArray(new FoldingDescriptor[0]);
   }
 
