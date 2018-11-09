@@ -79,7 +79,7 @@ public class JdcrPsiTreeUtils {
     LinkedList<TextRange> result = new LinkedList<>();
     int prevLineBreak = range.getStartOffset();
     for (PsiElement child : element.getChildren()) {
-      if (range.contains(child.getStartOffsetInParent())) {
+      if (range.intersectsStrict(child.getTextRangeInParent())) {
         if (child instanceof PsiWhiteSpace
             && child.getNextSibling() != null
             && child.getNextSibling().getNode().getElementType()
@@ -101,6 +101,9 @@ public class JdcrPsiTreeUtils {
             subElementRanges.add(nestedRange.shiftRight(child.getStartOffsetInParent()));
           }
           if (!subElementRanges.isEmpty()) {
+            int subElementRangesStart = subElementRanges.getFirst().getStartOffset();
+            if (prevLineBreak < subElementRangesStart) // ...<b>FOR_THAT_PART{@link test1}...
+              subElementRanges.addFirst(new TextRange(prevLineBreak, subElementRangesStart));
             result.addAll(subElementRanges);
             prevLineBreak = subElementRanges.getLast().getEndOffset();
           }
