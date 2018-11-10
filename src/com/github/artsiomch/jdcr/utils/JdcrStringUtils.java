@@ -1,6 +1,9 @@
 package com.github.artsiomch.jdcr.utils;
 
 import com.intellij.openapi.util.TextRange;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -11,6 +14,9 @@ import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
 
 public class JdcrStringUtils {
+  public static final Set<String> CODE_TAGS = new HashSet<>(Arrays.asList("code","literal"));
+  public static final Set<String> LINK_TAGS = new HashSet<>(Arrays.asList("link","linkplain"));
+
   private static final String T_START = "<(?!!--)"; // excluding Html comment beginning <!--
   private static final String T_END = "(?<!--)>"; // excluding Html comment ending -->
   private static final String T_BODY = "[^<>]+";

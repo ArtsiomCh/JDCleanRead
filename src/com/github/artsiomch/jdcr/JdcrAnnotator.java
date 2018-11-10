@@ -71,12 +71,19 @@ public class JdcrAnnotator implements Annotator {
         annotateHtmlTags();
       }
 
-    } else if (element instanceof PsiInlineDocTag
-        && ((PsiInlineDocTag) element).getName().equals("code")) { // @code
-      annotateCodeAnnotations();
-
+    } else if (element instanceof PsiInlineDocTag) {
+      String tagName = ((PsiInlineDocTag) element).getName();
+      if (JdcrStringUtils.CODE_TAGS.contains(tagName)
+          || JdcrStringUtils.LINK_TAGS.contains(tagName)) {
+        annotateJavaDocTagStartEnd((PsiInlineDocTag) element);
+      }
+      if (tagName.equals("code")) { // @code
+        annotateCodeTagValue();
+      }
     } else if (element instanceof PsiDocMethodOrFieldRef) { // @link @linkplain @value
-      annotateLinkAnnotations();
+      // fix {@link #to_method_call} is not highlighted:
+      // https://youtrack.jetbrains.com/issue/IDEA-197760
+      annotateLinkTagMethodRef();
     }
     this.holder = null;
     this.element = null;
@@ -84,13 +91,26 @@ public class JdcrAnnotator implements Annotator {
     multiLineTagRangesInParent = EMPTY_LIST;
   }
 
-  private void annotateLinkAnnotations() {
+  private void annotateJavaDocTagStartEnd(@NotNull PsiInlineDocTag psiInlineDocTag) {
+    // annotate JavaDoc tag Start
+    TextRange tagStart = new TextRange(0, 2 /* `{@` */ + psiInlineDocTag.getName().length());
+    doAnnotate(
+        tagStart.shiftRight(psiInlineDocTag.getTextRange().getStartOffset()),
+        JdcrColorSettingsPage.BORDERED);
+    // annotate JavaDoc tag End
+    if (psiInlineDocTag.getLastChild().getText().equals("}")) {
+      doAnnotate(
+          psiInlineDocTag.getLastChild().getTextRange() /* } */, JdcrColorSettingsPage.BORDERED);
+    }
+  }
+
+  private void annotateLinkTagMethodRef() {
     doAnnotate(
         new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()),
         JdcrColorSettingsPage.LINK_TAG);
   }
 
-  private void annotateCodeAnnotations() {
+  private void annotateCodeTagValue() {
     JdcrPsiTreeUtils.excludeLineBreaks(
             element, new TextRange(6 /* {@code */, element.getTextLength() - 1 /* } */))
         .forEach(

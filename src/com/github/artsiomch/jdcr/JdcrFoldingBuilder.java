@@ -33,7 +33,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     PsiElement root = node.getPsi();
     foldingDescriptors = new Stack<>();
 
-//    long startTime= System.currentTimeMillis();
+    //    long startTime= System.currentTimeMillis();
     for (PsiDocComment psiDocComment : PsiTreeUtil.findChildrenOfType(root, PsiDocComment.class)) {
       foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
 
@@ -45,21 +45,24 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class)
           .forEach(this::checkInlineJavaDocTags);
     }
-/*
-    System.out.printf("File: %-20s  Folding time: %6d,  Total folds created: %6d\n",
-        root.getContainingFile().getName(),
-        (System.currentTimeMillis() - startTime),
-        foldingDescriptors.capacity());
-*/
+    /*
+        System.out.printf("File: %-20s  Folding time: %6d,  Total folds created: %6d\n",
+            root.getContainingFile().getName(),
+            (System.currentTimeMillis() - startTime),
+            foldingDescriptors.capacity());
+    */
     return foldingDescriptors.toArray(new FoldingDescriptor[0]);
   }
 
-  /** Add FoldingDescriptors for inline JavaDoc tags: @code and @link */
+  /**
+   * Add FoldingDescriptors for inline JavaDoc tags: {@link JdcrStringUtils#CODE_TAGS} {@link
+   * JdcrStringUtils#LINK_TAGS}
+   */
   private void checkInlineJavaDocTags(@NotNull PsiInlineDocTag psiInlineDocTag) {
     String tagName = psiInlineDocTag.getName();
-    if (tagName.equals("code") || tagName.equals("literal")) {
+    if (JdcrStringUtils.CODE_TAGS.contains(tagName)) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
-    } else if (tagName.equals("link") || tagName.equals("linkplain")) {
+    } else if (JdcrStringUtils.LINK_TAGS.contains(tagName)) {
       foldJavaDocTagStartEnd(psiInlineDocTag);
 
       // Folding label part of @link tag
@@ -87,13 +90,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     }
   }
 
-  private static final int LENGTH_DOC_INLINE_TAG_START = 2; // {@
-
   private void foldJavaDocTagStartEnd(@NotNull PsiInlineDocTag psiInlineDocTag) {
     // fold JavaDoc tag Start
     JdcrPsiTreeUtils.excludeLineBreaks(
             psiInlineDocTag,
-            new TextRange(0, LENGTH_DOC_INLINE_TAG_START + psiInlineDocTag.getName().length() + 1))
+            new TextRange(
+                0, 2 /* `{@` */ + psiInlineDocTag.getName().length() + 1 /* space after */))
         .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range));
     // fold JavaDoc tag End
     addFoldingDescriptor(
@@ -146,8 +148,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
       FoldingDescriptor prevFoldingDescriptor = foldingDescriptors.pop();
       absoluteNewRange =
           new TextRange(
-              prevFoldingDescriptor.getRange().getStartOffset(),
-              absoluteNewRange.getEndOffset());
+              prevFoldingDescriptor.getRange().getStartOffset(), absoluteNewRange.getEndOffset());
       placeholderText = prevFoldingDescriptor.getPlaceholderText() + placeholderText;
     }
 

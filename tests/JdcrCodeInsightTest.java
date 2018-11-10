@@ -7,8 +7,13 @@ public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
     return "testData";
   }
 
-  public void testAnnotatorTagsHighlighting() {
-    myFixture.configureByFiles("AnnotatorTestData.java");
+  public void testAnnotatorSingleLineTagsHighlighting() {
+    myFixture.configureByFiles("AnnotatorSinglelineTagsTestData.java");
+    myFixture.checkHighlighting(false, true, false, false);
+  }
+
+  public void testAnnotatorMultilineTagsHighlighting() {
+    myFixture.configureByFiles("AnnotatorMultilineTagsTestData.java");
     myFixture.checkHighlighting(false, true, false, false);
   }
 
