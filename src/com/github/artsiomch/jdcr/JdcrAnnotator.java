@@ -70,6 +70,8 @@ public class JdcrAnnotator implements Annotator {
         // Annotate Html Tags (including multiline Tags)
         annotateHtmlTags();
       }
+      // Annotate Html Escaped Chars
+      annotateHtmlEscapedChars();
 
     } else if (element instanceof PsiInlineDocTag) {
       String tagName = ((PsiInlineDocTag) element).getName();
@@ -131,6 +133,14 @@ public class JdcrAnnotator implements Annotator {
       range = range.shiftRight(element.getParent().getTextRange().getStartOffset());
       doAnnotate(range, DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
       doAnnotate(range, JdcrColorSettingsPage.BORDERED);
+    }
+  }
+
+  private void annotateHtmlEscapedChars() {
+    for (TextRange textRange : JdcrStringUtils.getHtmlEscapedChars(element.getText())) {
+      doAnnotate(
+          textRange.shiftRight(element.getTextRange().getStartOffset()),
+          JdcrColorSettingsPage.BORDERED);
     }
   }
 

@@ -124,13 +124,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     JdcrPsiTreeUtils.getMultiLineTagRangesInParent(psiDocToken)
         .forEach(textRange -> addFoldingDescriptor(psiDocToken.getParent(), textRange));
 
-    JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())
-        .forEach(
-            textRange ->
-                addFoldingDescriptor(
-                    psiDocToken,
-                    textRange,
-                    Parser.unescapeEntities(textRange.substring(psiDocToken.getText()), true)));
+    for (TextRange textRange : JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())) {
+      addFoldingDescriptor(
+          psiDocToken,
+          textRange,
+          Parser.unescapeEntities(textRange.substring(psiDocToken.getText()), true));
+    }
   }
 
   private void addFoldingDescriptor(@NotNull PsiElement element, @NotNull TextRange range) {

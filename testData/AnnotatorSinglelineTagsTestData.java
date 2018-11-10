@@ -11,6 +11,8 @@
  * <info descr="null">{@literal</info> <b>not_bold</b><info descr="null">}</info>
  * <info descr="null">{@link</info> #<info descr="null">link_tag</info> link_name<info descr="null">}</info>
  * <!-- not a tag --> jjj -->
+ * escaped chars: <info descr="null">&amp;</info><info descr="null">&amp;</info>
+ * &not_escaped_char;
  */
 
 public class AnnotatorSinglelineTagsTestData {

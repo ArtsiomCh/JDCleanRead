@@ -41,7 +41,7 @@ public class JdcrColorSettingsPage implements ColorSettingsPage {
         new AttributesDescriptor("Tag value of: @link", LINK_TAG),
         new AttributesDescriptor("Tag value of: <b> | <a name=...>", BOLD_FONT),
         new AttributesDescriptor("Tag value of: <i> | <em>", ITALIC_FONT),
-        new AttributesDescriptor("Html Tag additional Mark Up", BORDERED)
+        new AttributesDescriptor("Html / Javadoc Tags and Escaped Chars additional Mark Up", BORDERED)
       };
 
   @Nullable

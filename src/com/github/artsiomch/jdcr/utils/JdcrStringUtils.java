@@ -23,7 +23,7 @@ public class JdcrStringUtils {
   private static final Pattern HTML_TAG = Pattern.compile(T_START + T_BODY + T_END);
   private static final Pattern HTML_INCOMPLETE_TAG_START = Pattern.compile(T_START + T_BODY);
   private static final Pattern HTML_INCOMPLETE_TAG_END = Pattern.compile(T_BODY + T_END);
-  private static final Pattern HTML_ESC_CHAR = Pattern.compile("&[^;]+;");
+  private static final Pattern HTML_ESC_CHAR = Pattern.compile("&#?[a-zA-Z0-9]+;");
 
   /**
    * Parse given text to find HTML tags
