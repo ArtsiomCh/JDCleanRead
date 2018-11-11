@@ -2,6 +2,10 @@
  * <info descr="null">{@code</info><info descr="null"> multiline</info>
  * <info descr="null">code_tag</info><info descr="null">}</info>
  *
+ * <info descr="null">{@link</info> Integer#<info descr="null">toString(</info>
+ *
+ * <info descr="null">)</info> name<info descr="null">}</info>
+ *
  * inline <info descr="null"><b></info><info descr="null">bold tag </info><info descr="null"></b></info> and multiline <info descr="null"><b></info><info descr="null"> bold </info>
  * <info descr="null">tag</info><info descr="null"></b></info> with another multiline <info descr="null"><b></info><info descr="null"> bold tag </info>
  * <info descr="null"></b></info> with inline <info descr="null"><b></info><info descr="null">bold tag</info><info descr="null"></b></info>.

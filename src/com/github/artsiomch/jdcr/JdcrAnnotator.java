@@ -107,9 +107,16 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateLinkTagMethodRef() {
-    doAnnotate(
-        new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset()),
-        JdcrColorSettingsPage.LINK_TAG);
+    TextRange linkRefRangeInElement =
+        new TextRange(element.getTextOffset(), element.getTextRange().getEndOffset())
+            .shiftLeft(element.getTextRange().getStartOffset());
+    // multiline link reference case: {@link Integer#toString(
+    // ) toString}
+    for (TextRange range : JdcrPsiTreeUtils.excludeLineBreaks(element, linkRefRangeInElement)) {
+      doAnnotate(
+          range.shiftRight(element.getTextRange().getStartOffset()),
+          JdcrColorSettingsPage.LINK_TAG);
+    }
   }
 
   private void annotateCodeTagValue() {
