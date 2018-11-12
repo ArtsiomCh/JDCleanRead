@@ -35,7 +35,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
     //    long startTime= System.currentTimeMillis();
     for (PsiDocComment psiDocComment : PsiTreeUtil.findChildrenOfType(root, PsiDocComment.class)) {
-      foldingGroup = FoldingGroup.newGroup("JDCR " + psiDocComment.getTokenType().toString());
+      foldingGroup = FoldingGroup.newGroup("JDCR fold: " + psiDocComment.getTextRange().toString());
 
       PsiTreeUtil.findChildrenOfType(psiDocComment, PsiDocToken.class)
           .stream()
@@ -107,28 +107,26 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
   private void checkHtmlTagsAndEscapedChars(@NotNull PsiDocToken psiDocToken) {
-    JdcrStringUtils.getHtmlTags(psiDocToken.getText())
-        .forEach(
-            textRange -> {
-              String tagsToFold = textRange.substring(psiDocToken.getText()).toLowerCase();
-              if (tagsToFold.contains("<li>")) {
-                addFoldingDescriptor(psiDocToken, textRange, " - ");
-                //              } else if (tagsToFold.contains("<td>")) {
-                //                addFoldingDescriptor(psiDocToken, textRange, "\t");
-              } else {
-                addFoldingDescriptor(psiDocToken, textRange);
-              }
-            });
-
+    String docTokenText = psiDocToken.getText();
+    for (TextRange range : JdcrStringUtils.getHtmlTags(docTokenText)) {
+      String tagsToFold = range.substring(docTokenText).toLowerCase();
+      if (tagsToFold.contains("<li>")) {
+        addFoldingDescriptor(psiDocToken, range, " - ");
+        //              } else if (tagsToFold.contains("<td>")) {
+        //                addFoldingDescriptor(psiDocToken, textRange, "\t");
+      } else {
+        addFoldingDescriptor(psiDocToken, range);
+      }
+    }
     // Check for Multi-line tag.
     JdcrPsiTreeUtils.getMultiLineTagRangesInParent(psiDocToken)
         .forEach(textRange -> addFoldingDescriptor(psiDocToken.getParent(), textRange));
 
-    for (TextRange textRange : JdcrStringUtils.getHtmlEscapedChars(psiDocToken.getText())) {
+    for (TextRange textRange : JdcrStringUtils.getHtmlEscapedChars(docTokenText)) {
       addFoldingDescriptor(
           psiDocToken,
           textRange,
-          Parser.unescapeEntities(textRange.substring(psiDocToken.getText()), true));
+          Parser.unescapeEntities(textRange.substring(docTokenText), true));
     }
   }
 

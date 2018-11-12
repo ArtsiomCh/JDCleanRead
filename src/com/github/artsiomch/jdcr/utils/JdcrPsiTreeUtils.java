@@ -14,20 +14,19 @@ import com.intellij.psi.javadoc.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class JdcrPsiTreeUtils {
 
   /**
-   * Check if PsiDocToken inside @code or @literal tag -> do not interpreting the text as HTML
-   * markup
+   * Check if PsiDocToken inside {@link JdcrStringUtils#CODE_TAGS} -> do not interpreting the text
+   * as HTML markup
    */
   public static boolean isInsideCodeOrLiteralTag(@NotNull PsiDocToken psiDocToken) {
     if (psiDocToken.getParent() instanceof PsiInlineDocTag) {
       String parentName = ((PsiInlineDocTag) psiDocToken.getParent()).getName();
-      return parentName.equals("code") || parentName.equals("literal");
+      return JdcrStringUtils.CODE_TAGS.contains(parentName);
     }
     return false;
   }
@@ -70,14 +69,17 @@ public class JdcrPsiTreeUtils {
   /**
    * Look inside {@code range} in JavaDoc {@code element} for line breaks
    *
-   * @param element
+   * @param element javadoc PsiElement
    * @param range inside <tt>element</tt> to check
-   * @return List of TextRanges relative to {@code element} between line breaks inside {@code range}
+   * @return List of TextRanges <b>relative</b> to {@code element} between line breaks inside {@code
+   *     range}
    */
+  // todo: find better alternative to LinkedList
   public static LinkedList<TextRange> excludeLineBreaks(
       @NotNull PsiElement element, @NotNull TextRange range) {
     LinkedList<TextRange> result = new LinkedList<>();
     int prevLineBreak = range.getStartOffset();
+    // todo: fetch only children inside the range.
     for (PsiElement child : element.getChildren()) {
       if (range.intersectsStrict(child.getTextRangeInParent())) {
         if (child instanceof PsiWhiteSpace
@@ -86,13 +88,11 @@ public class JdcrPsiTreeUtils {
                 == JavaDocTokenType.DOC_COMMENT_LEADING_ASTERISKS) {
           // new line PsiWhiteSpace element found
           PsiElement ws = child;
-          PsiElement leadingAsterisks = ws.getNextSibling();
+          PsiElement la = ws.getNextSibling();
           if (ws.getStartOffsetInParent() > prevLineBreak) {
             result.add(new TextRange(prevLineBreak, ws.getStartOffsetInParent()));
           }
-          prevLineBreak =
-              leadingAsterisks.getStartOffsetInParent()
-                  + leadingAsterisks.getTextLength() /*length of '*'s */;
+          prevLineBreak = la.getStartOffsetInParent() + la.getTextLength() /*length of '*'s */;
         } else if (child instanceof PsiDocTag) {
           // break nested elements
           LinkedList<TextRange> subElementRanges = new LinkedList<>();
@@ -102,8 +102,9 @@ public class JdcrPsiTreeUtils {
           }
           if (!subElementRanges.isEmpty()) {
             int subElementRangesStart = subElementRanges.getFirst().getStartOffset();
-            if (prevLineBreak < subElementRangesStart) // ...<b>FOR_THAT_PART{@link test1}...
+            if (prevLineBreak < subElementRangesStart) { // ...<b>FOR_THAT_PART{@link test1}...
               subElementRanges.addFirst(new TextRange(prevLineBreak, subElementRangesStart));
+            }
             result.addAll(subElementRanges);
             prevLineBreak = subElementRanges.getLast().getEndOffset();
           }
@@ -123,8 +124,9 @@ public class JdcrPsiTreeUtils {
     for (TextRange range : ranges) {
       if (range.substring(element.getText()).charAt(0) == ' '
           && element.getText().charAt(range.getStartOffset() - 1) == '*') {
-        if (range.getLength() > 1) // hack to avoid 0 length TextRange
+        if (range.getLength() > 1) { // hack to avoid 0 length TextRange
           result.add(new TextRange(range.getStartOffset() + 1, range.getEndOffset()));
+        }
       } else result.add(range);
     }
     return result;
@@ -168,8 +170,10 @@ public class JdcrPsiTreeUtils {
   }
 
   /**
-   * Recursive (depth first) search for all elements of given {@code class}. Don't use it. Use
-   * {@link com.intellij.psi.util.PsiTreeUtil#findChildrenOfType(PsiElement, Class)}.
+   * Recursive (depth first) search for all elements of given {@code class}.
+   *
+   * <p>Don't use it. Use {@link com.intellij.psi.util.PsiTreeUtil#findChildrenOfType(PsiElement,
+   * Class)}.
    *
    * @param element a PSI element to start search from.
    * @param clazz element type to search for.

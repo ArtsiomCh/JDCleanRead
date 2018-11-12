@@ -61,7 +61,7 @@ public class JdcrAnnotator implements Annotator {
         annotateTagValue(TT_TAG, JdcrColorSettingsPage.CODE_TAG);
         annotateTagValue(PRE_TAG, JdcrColorSettingsPage.CODE_TAG);
 
-        // Annotate HTML link tags
+        // Annotate HTML link< a href=...> tags
         annotateTagValue(A_HREF_TAG, JdcrColorSettingsPage.HTML_LINK_TAG);
 
         // Annotate <a name=...> tags
@@ -120,13 +120,13 @@ public class JdcrAnnotator implements Annotator {
   }
 
   private void annotateCodeTagValue() {
-    JdcrPsiTreeUtils.excludeLineBreaks(
-            element, new TextRange(6 /* {@code */, element.getTextLength() - 1 /* } */))
-        .forEach(
-            eachLineRange ->
-                doAnnotate(
-                    eachLineRange.shiftRight(element.getTextRange().getStartOffset()),
-                    JdcrColorSettingsPage.CODE_TAG));
+    for (TextRange eachLineRange :
+        JdcrPsiTreeUtils.excludeLineBreaks(
+            element, new TextRange(6 /* {@code */, element.getTextLength() - 1 /* } */))) {
+      doAnnotate(
+          eachLineRange.shiftRight(element.getTextRange().getStartOffset()),
+          JdcrColorSettingsPage.CODE_TAG);
+    }
   }
 
   private void annotateHtmlTags() {

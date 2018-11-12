@@ -7,14 +7,16 @@
 <h4>How?</h4>
       <li> Hiding(folding) HTML tags;
       <li> Unescape HTML escaped chars;
-      <li> Apply appropriate text styles for value of tags: &lt;code&gt; | &lt;tt&gt; | &lt;li&gt; | &lt;b&gt; | &lt;i&gt; | @code | @literal | @link | @linkplain | @value;
-      <li> Some tag value text styles are customisable at Settings -> Editor -> Color Scheme -> JavaDoc Clean Read. <br>
+      <li> Text styles for value of tags: &lt;code&gt; | &lt;tt&gt; | &lt;li&gt; | &lt;b&gt; | &lt;i&gt; | &lt;a href/name=...&gt; | @code | @literal | @link | @linkplain | @value;
+      <li> Tag and tag's value text styles are customisable at Settings -> Editor -> Color Scheme -> JavaDoc Clean Read.
 
 Both HTML-JavaDoc tags hiding and HTML escaped chars unescaping are implemented through IntelliJ <a href="https://www.jetbrains.com/help/idea/code-folding.html">code folding</a>. So all shortcuts (Ctrl+. Ctrl+NumPad + and others) works. As well as <i>code folding toggles</i> (like <code>&#x2302;</code>) shown in the editor to the left of the corresponding multiline folding regions. <br>       
 
-There are some limitations for corner cases in current release: multiline tags, nested tags, ... But mostly it works fine. <br>
+There are some limitations for corner cases in current release: multiline tags (fixed at 0.3.0), nested tags (fixed at 0.3.0), ... But mostly it works fine. <br>
 
-Side by side comparison of <code>java.lang.String</code> top JavaDoc comment: <br>
+Side by side comparison of <code>java.nio.charset.Charset</code> and <code>java.lang.String</code> top JavaDoc comment: <br>
+<img src="Screenshot_Charset.png">
+
 <img src="Screenshot_String.png">
 
 For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
@@ -27,6 +29,15 @@ For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
 Plugin is open-source software and is licenced under GPL v3 licence.
 
 ## **Versions**
+
+0.3.0 - Multi-line Html/Javadoc tag and tag's value support added (all possible cases founded). Also added/fixed: <br>
+    &emsp; - Annotate Html/Javadoc tag and Html Escaped chars (with Bordering effect by default - customisable). <br>
+    &emsp; - Customisation for &lt;b&gt; and &lt;i&gt; tags added. <br>
+    &emsp; - Proper support for both Default and Darcula themes added. <br>
+    &emsp; - fix <a href="https://youtrack.jetbrains.com/issue/IDEA-198738">IDEA-198738</a>. <br>
+    &emsp; - &lt;a name=...&gt; support (and separation from &lt;a href=...&gt;) added. <br>
+    &emsp; - CPU usage and Mem allocation optimisations. <br>
+
 0.2.2 - Highlight &lt;a href=...&gt; tag value &lt;/a&gt; (customisable). <br>
 
 0.2.1 - Few improvements: <br>
@@ -42,4 +53,4 @@ Plugin is open-source software and is licenced under GPL v3 licence.
 0.1.0 - Initial release: <br>
            &emsp; * hiding(folding) HTML tags; <br>
            &emsp; * unescape HTML escaped chars; <br>
-           &emsp; * text styles for tags: &lt;code&gt; | &lt;tt&gt; | &lt;b&gt; | &lt;i&gt; | @code | @link. <br>
+           &emsp; * text styles for tags: &lt;code&gt; | &lt;tt&gt; | &lt;b&gt; | &lt;i&gt; | @code | @link (fix <a href="https://youtrack.jetbrains.com/issue/IDEA-197760">IDEA-197760</a>). <br>
