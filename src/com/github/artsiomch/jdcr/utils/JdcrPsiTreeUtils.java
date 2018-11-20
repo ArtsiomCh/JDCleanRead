@@ -81,7 +81,7 @@ public class JdcrPsiTreeUtils {
     int prevLineBreak = range.getStartOffset();
     // todo: fetch only children inside the range.
     for (PsiElement child : element.getChildren()) {
-      if (range.intersectsStrict(child.getTextRangeInParent())) {
+      if (range.intersectsStrict(getTextRangeInParent(child))) {
         if (child instanceof PsiWhiteSpace
             && child.getNextSibling() != null
             && child.getNextSibling().getNode().getElementType()
@@ -156,7 +156,7 @@ public class JdcrPsiTreeUtils {
           TextRange incompleteHtmlTagStart =
               JdcrStringUtils.getIncompleteHtmlTagStart(prevSibling.getText());
           if (incompleteHtmlTagStart == null) {
-            foundRangesInParent.addFirst(prevSibling.getTextRangeInParent());
+            foundRangesInParent.addFirst(getTextRangeInParent(prevSibling));
           } else {
             foundRangesInParent.addFirst(
                 incompleteHtmlTagStart.shiftRight(prevSibling.getStartOffsetInParent()));
@@ -167,6 +167,15 @@ public class JdcrPsiTreeUtils {
       }
     }
     return EMPTY_LIST;
+  }
+
+  /**
+   * @return text range of element relative to its parent
+   * @see PsiElement#getTextRangeInParent() - make it avaliable before 2018.3
+   */
+  @NotNull
+  private static TextRange getTextRangeInParent(@NotNull PsiElement element) {
+    return TextRange.from(element.getStartOffsetInParent(), element.getTextLength());
   }
 
   /**

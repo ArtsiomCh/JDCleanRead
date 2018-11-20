@@ -29,6 +29,7 @@ For even more fun see <code>java.util.regex.Pattern</code> ;) <br>
 Plugin is open-source software and is licenced under GPL v3 licence.
 
 ## **Versions**
+0.3.1 - Make new functionality (see 0.3.0) available since 181.0 instead of 183.0 <br>
 
 0.3.0 - Multi-line Html/Javadoc tag and tag's value support added (all possible cases founded). Also added/fixed: <br>
     &emsp; - Annotate Html/Javadoc tag and Html Escaped chars (with Bordering effect by default - customisable). <br>
