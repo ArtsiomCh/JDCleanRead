@@ -20,12 +20,21 @@ public class Tag {
     return removeWS(text).contains(this.close);
   }
 
+  private static final char ws = ' ';
+
+  /** Remove spaces from given string. Optimised copy of Apache remove() */
   @NotNull
   private String removeWS(@NotNull String text){
-    StringBuilder result = new StringBuilder();
-    for (char c : text.toCharArray()) {
-        if (c!=' ') result.append(c);
+    int index = text.indexOf(ws);
+    if (index < 0) {
+      return text;
     }
-    return result.toString();
-  }
+    final char[] chars = text.toCharArray();
+    int pos = index;
+    for (int i = index; i < chars.length; i++) {
+      if (chars[i] != ws) {
+        chars[pos++] = chars[i];
+      }
+    }
+    return (new String(chars, 0, pos));  }
 }
