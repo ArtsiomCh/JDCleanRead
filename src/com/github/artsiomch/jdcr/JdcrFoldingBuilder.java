@@ -15,15 +15,16 @@ import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Stack;
+import java.util.Deque;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jsoup.parser.Parser;
 
 public class JdcrFoldingBuilder implements FoldingBuilder {
 
-  private Stack<FoldingDescriptor> foldingDescriptors;
+  private Deque<FoldingDescriptor> foldingDescriptors;
   private FoldingGroup foldingGroup;
   private static final int LENGTH_DOC_INLINE_TAG_END = 1; // }
 
@@ -31,7 +32,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
   @Override
   public FoldingDescriptor[] buildFoldRegions(@NotNull ASTNode node, @NotNull Document document) {
     PsiElement root = node.getPsi();
-    foldingDescriptors = new Stack<>();
+    foldingDescriptors = new ArrayDeque<>();
 
     //    long startTime= System.currentTimeMillis();
     for (PsiDocComment psiDocComment : PsiTreeUtil.findChildrenOfType(root, PsiDocComment.class)) {
@@ -139,7 +140,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
     // reducing folding regions amount by joint sequential regions into one: <i><b>...
     TextRange absoluteNewRange = range.shiftRight(element.getTextRange().getStartOffset());
-    if (!foldingDescriptors.empty()
+    if (!foldingDescriptors.isEmpty()
         && foldingDescriptors.peek().getRange().getEndOffset()
             == absoluteNewRange.getStartOffset()) {
       FoldingDescriptor prevFoldingDescriptor = foldingDescriptors.pop();

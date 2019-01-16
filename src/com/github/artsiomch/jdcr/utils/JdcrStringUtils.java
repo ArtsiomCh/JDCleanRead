@@ -2,6 +2,7 @@ package com.github.artsiomch.jdcr.utils;
 
 import com.intellij.openapi.util.TextRange;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +127,7 @@ public class JdcrStringUtils {
   }
 
   private static final int EMPTY_INDEX = -2;
-  private static final List<TextRange> EMPTY_ARRAY = new ArrayList<>();
+  private static final List<TextRange> EMPTY_ARRAY = Collections.emptyList();;
 
   /**
    * Parse given text to find given HTML tags

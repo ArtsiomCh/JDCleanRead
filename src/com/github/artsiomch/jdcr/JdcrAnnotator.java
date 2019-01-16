@@ -14,8 +14,9 @@ import com.intellij.psi.impl.source.javadoc.PsiDocMethodOrFieldRef;
 import com.intellij.psi.javadoc.PsiDocToken;
 import com.intellij.psi.javadoc.PsiInlineDocTag;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,8 +24,8 @@ public class JdcrAnnotator implements Annotator {
 
   private AnnotationHolder holder;
   private PsiElement element;
-  private List<TextRange> foundHtmlTags = EMPTY_ARRAY;
-  private LinkedList<TextRange> multiLineTagRangesInParent = EMPTY_LIST;
+  private List<TextRange> foundHtmlTags = EMPTY_LIST;
+  private List<TextRange> multiLineTagRangesInParent = EMPTY_LIST;
 
   private static final Tag CODE_TAG = new Tag("<code>", "</code>");
   private static final Tag TT_TAG = new Tag("<tt>", "</tt>");
@@ -35,8 +36,7 @@ public class JdcrAnnotator implements Annotator {
   private static final Tag ITALIC_TAG = new Tag("<i>", "</i>");
   private static final Tag EM_TAG = new Tag("<em>", "</em>");
 
-  private static final List<TextRange> EMPTY_ARRAY = new ArrayList<>();
-  private static final LinkedList<TextRange> EMPTY_LIST = new LinkedList<>();
+  private static final List<TextRange> EMPTY_LIST = Collections.emptyList();
 
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
@@ -89,7 +89,7 @@ public class JdcrAnnotator implements Annotator {
     }
     this.holder = null;
     this.element = null;
-    foundHtmlTags = EMPTY_ARRAY;
+    foundHtmlTags = EMPTY_LIST;
     multiLineTagRangesInParent = EMPTY_LIST;
   }
 
@@ -169,17 +169,22 @@ public class JdcrAnnotator implements Annotator {
     // Check for Multi-line open tag.
     if (!multiLineTagRangesInParent.isEmpty()
         && tag.openIn(getMultilineTagText(element.getParent(), multiLineTagRangesInParent))) {
-      int tagValueStartInParent = multiLineTagRangesInParent.getLast().getEndOffset();
+      int tagValueStartInParent = getLast(multiLineTagRangesInParent).getEndOffset();
       rangesToAnnotate.addAll(getTagValueRanges(tag, tagValueStartInParent));
     }
 
     rangesToAnnotate.forEach(range -> doAnnotate(range, textAttributesKey));
   }
 
+  private <T> T getLast (@NotNull List<T> list) {
+    if (list.isEmpty())
+      throw new NoSuchElementException();
+    return list.get(list.size() - 1);
+  }
+
   private String getMultilineTagText(
-      @NotNull PsiElement parent, @NotNull LinkedList<TextRange> multilineTagRangesInParent) {
-    return multilineTagRangesInParent
-        .stream()
+      @NotNull PsiElement parent, @NotNull List<TextRange> multilineTagRangesInParent) {
+    return multilineTagRangesInParent.stream()
         .map(range -> range.substring(parent.getText()))
         .reduce("", String::concat);
   }
@@ -200,8 +205,7 @@ public class JdcrAnnotator implements Annotator {
 
         int startOffsetInParent = inspectingElement.getStartOffsetInParent();
         tagValueEndInParent =
-            JdcrStringUtils.getValuesOfTag(inspectingElement.getText(), tag)
-                .stream()
+            JdcrStringUtils.getValuesOfTag(inspectingElement.getText(), tag).stream()
                 .filter(range1 -> range1.getStartOffset() == 0)
                 // close tag found
                 .findFirst()
@@ -213,12 +217,12 @@ public class JdcrAnnotator implements Annotator {
 
         if (tagValueEndInParent == -1) {
           // Check for Multi-line close tag.
-          LinkedList<TextRange> multiLineTagRangesInParent =
+          List<TextRange> multiLineTagRangesInParent =
               JdcrPsiTreeUtils.getMultiLineTagRangesInParent(inspectingElement);
           if (!multiLineTagRangesInParent.isEmpty()
               && tag.closeIn(
                   getMultilineTagText(element.getParent(), multiLineTagRangesInParent))) {
-            tagValueEndInParent = multiLineTagRangesInParent.getFirst().getStartOffset();
+            tagValueEndInParent = getFirst(multiLineTagRangesInParent).getStartOffset();
           }
         }
       }
@@ -226,12 +230,18 @@ public class JdcrAnnotator implements Annotator {
     }
 
     return (tagValueEndInParent == -1)
-        ? EMPTY_ARRAY
+        ? EMPTY_LIST
         : JdcrPsiTreeUtils.excludeLineBreaks(
                 element.getParent(), new TextRange(tagValueStartInParent, tagValueEndInParent))
             .stream()
             .map(range -> range.shiftRight(element.getParent().getTextRange().getStartOffset()))
             .collect(Collectors.toCollection(ArrayList::new));
+  }
+
+  private <T> T getFirst (@NotNull List<T> list) {
+    if (list.isEmpty())
+      throw new NoSuchElementException();
+    return list.get(0);
   }
 
   private static int countAnnotation = 0;

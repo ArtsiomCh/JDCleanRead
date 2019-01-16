@@ -11,9 +11,13 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.javadoc.*;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,10 +78,9 @@ public class JdcrPsiTreeUtils {
    * @return List of TextRanges <b>relative</b> to {@code element} between line breaks inside {@code
    *     range}
    */
-  // todo: find better alternative to LinkedList
-  public static LinkedList<TextRange> excludeLineBreaks(
+  public static List<TextRange> excludeLineBreaks(
       @NotNull PsiElement element, @NotNull TextRange range) {
-    LinkedList<TextRange> result = new LinkedList<>();
+    List<TextRange> result = new ArrayList<>();
     int prevLineBreak = range.getStartOffset();
     // todo: fetch only children inside the range.
     for (PsiElement child : element.getChildren()) {
@@ -95,9 +98,16 @@ public class JdcrPsiTreeUtils {
           prevLineBreak = la.getStartOffsetInParent() + la.getTextLength() /*length of '*'s */;
         } else if (child instanceof PsiDocTag) {
           // break nested elements
-          LinkedList<TextRange> subElementRanges = new LinkedList<>();
-          for (TextRange nestedRange :
-              excludeLineBreaks(child, new TextRange(0, child.getTextLength()))) {
+/*
+          Deque<TextRange> subElementRanges =
+              excludeLineBreaks(child, new TextRange(0, child.getTextLength())).stream()
+                  .map(nestedRange -> nestedRange.shiftRight(child.getStartOffsetInParent()))
+                  .collect(Collectors.toCollection(ArrayDeque::new));
+*/
+          final List<TextRange> nestedRanges =
+              excludeLineBreaks(child, new TextRange(0, child.getTextLength()));
+          Deque<TextRange> subElementRanges = new ArrayDeque<>(nestedRanges.size());
+          for (TextRange nestedRange : nestedRanges) {
             subElementRanges.add(nestedRange.shiftRight(child.getStartOffsetInParent()));
           }
           if (!subElementRanges.isEmpty()) {
@@ -118,9 +128,9 @@ public class JdcrPsiTreeUtils {
   }
 
   // don't include ' ' at the begging of line (after leading asterisks) if any.
-  private static LinkedList<TextRange> removeLeadingSpace(
-      @NotNull PsiElement element, @NotNull LinkedList<TextRange> ranges) {
-    LinkedList<TextRange> result = new LinkedList<>();
+  private static List<TextRange> removeLeadingSpace(
+      @NotNull PsiElement element, @NotNull Collection<TextRange> ranges) {
+    List<TextRange> result = new ArrayList<>(ranges.size());
     for (TextRange range : ranges) {
       if (range.substring(element.getText()).charAt(0) == ' '
           && element.getText().charAt(range.getStartOffset() - 1) == '*') {
@@ -132,7 +142,7 @@ public class JdcrPsiTreeUtils {
     return result;
   }
 
-  private static final LinkedList<TextRange> EMPTY_LIST = new LinkedList<>();
+  private static final List<TextRange> EMPTY_LIST = Collections.emptyList();
 
   /**
    * Check element for incomplete HTML Tag <b>end</b> (lonely `{@code >}`) and look behind for
@@ -142,10 +152,10 @@ public class JdcrPsiTreeUtils {
    * @return {@link TextRange}s (<i>relatively</i> to {@code element.getParent()} element) of full
    *     multiline HTML Tag, excluding service elements (leading asterisks, etc).
    */
-  public static LinkedList<TextRange> getMultiLineTagRangesInParent(@NotNull PsiElement element) {
+  public static List<TextRange> getMultiLineTagRangesInParent(@NotNull PsiElement element) {
     TextRange incompleteHtmlTagEnd = JdcrStringUtils.getIncompleteHtmlTagEnd(element.getText());
     if (incompleteHtmlTagEnd != null) {
-      LinkedList<TextRange> foundRangesInParent = new LinkedList<>();
+      Deque<TextRange> foundRangesInParent = new ArrayDeque<>();
       foundRangesInParent.add(incompleteHtmlTagEnd.shiftRight(element.getStartOffsetInParent()));
 
       // Look behind for tag start.
