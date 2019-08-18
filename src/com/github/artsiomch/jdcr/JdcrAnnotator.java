@@ -3,6 +3,7 @@ package com.github.artsiomch.jdcr;
 import com.github.artsiomch.jdcr.utils.JdcrPsiTreeUtils;
 import com.github.artsiomch.jdcr.utils.JdcrStringUtils;
 import com.github.artsiomch.jdcr.utils.Tag;
+import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
@@ -248,7 +249,10 @@ public class JdcrAnnotator implements Annotator {
 
   private void doAnnotate(
       @NotNull TextRange absoluteRange, @NotNull TextAttributesKey textAttributesKey) {
-    holder.createInfoAnnotation(absoluteRange, null).setTextAttributes(textAttributesKey);
+    Annotation annotation =
+      holder.createInfoAnnotation(absoluteRange, textAttributesKey.getExternalName());
+    annotation.setTooltip(null);
+    annotation.setTextAttributes(textAttributesKey);
     /*
         countAnnotation++;
         if (countAnnotation % 1000 == 1)

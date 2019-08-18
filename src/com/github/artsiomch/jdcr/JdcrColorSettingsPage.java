@@ -19,13 +19,13 @@ import java.util.Map;
 public class JdcrColorSettingsPage implements ColorSettingsPage {
   public static final TextAttributesKey CODE_TAG =
       TextAttributesKey.createTextAttributesKey(
-          "code tag", DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
+          "code_tag", DefaultLanguageHighlighterColors.DOC_COMMENT_MARKUP);
   public static final TextAttributesKey LINK_TAG =
       TextAttributesKey.createTextAttributesKey(
-          "link tag", DefaultLanguageHighlighterColors.CLASS_NAME);
+          "link_tag", DefaultLanguageHighlighterColors.CLASS_NAME);
   public static final TextAttributesKey HTML_LINK_TAG =
       TextAttributesKey.createTextAttributesKey(
-          "html link tag", DefaultLanguageHighlighterColors.NUMBER);
+          "html_link_tag", DefaultLanguageHighlighterColors.NUMBER);
 
   public static final TextAttributesKey BOLD_FONT =
       TextAttributesKey.createTextAttributesKey("MY_BOLD");

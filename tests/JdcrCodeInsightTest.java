@@ -1,3 +1,4 @@
+import com.intellij.testFramework.ExpectedHighlightingData;
 import com.intellij.testFramework.fixtures.LightCodeInsightFixtureTestCase;
 
 public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
@@ -14,7 +15,8 @@ public class JdcrCodeInsightTest extends LightCodeInsightFixtureTestCase {
 
   public void testAnnotatorMultilineTagsHighlighting() {
     myFixture.configureByFiles("AnnotatorMultilineTagsTestData.java");
-    myFixture.checkHighlighting(false, true, false, false);
+    ExpectedHighlightingData.expectedDuplicatedHighlighting(
+        () -> myFixture.checkHighlighting(false, true, false, false));
   }
 
   public void testFoldingHtmlTags() {
