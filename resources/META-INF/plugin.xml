@@ -1,8 +1,10 @@
 <idea-plugin>
   <id>com.github.ArtsiomCh.JDCleanRead</id>
   <name>JavaDoc Clean Read</name>
-  <version>0.3.1dev</version>
+  <version>192.0.dev1</version>
   <vendor email="achapialiou@gmail.com" url="http://github.com/ArtsiomCh/JDCleanRead">Artsiom Chapialiou</vendor>
+
+  <product-descriptor code="PJDCLEANREAD" release-date="20190820" release-version="1921"/>
 
   <description><![CDATA[
       Making JavaDoc comments more readable by:<br>
@@ -38,7 +40,7 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="181.0"/>
+  <idea-version since-build="191.0"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->

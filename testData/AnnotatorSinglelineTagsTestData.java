@@ -13,6 +13,8 @@
  * <!-- not a tag --> jjj -->
  * escaped chars: <info descr="MY_BORDERED">&amp;</info><info descr="MY_BORDERED">&amp;</info>
  * &not_escaped_char;
+ * <info descr="MY_BORDERED">{@code</info><info descr="MY_BORDERED">}</info>
+ * <info descr="MY_BORDERED">{@code</info><info descr="code_tag"> incomplete_code_tag</info>
  */
 
 public class AnnotatorSinglelineTagsTestData {

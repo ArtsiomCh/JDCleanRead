@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.JavaDocElementType;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocToken;
@@ -38,12 +39,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     for (PsiDocComment psiDocComment : PsiTreeUtil.findChildrenOfType(root, PsiDocComment.class)) {
       foldingGroup = FoldingGroup.newGroup("JDCR fold: " + psiDocComment.getTextRange().toString());
 
-      PsiTreeUtil.findChildrenOfType(psiDocComment, PsiDocToken.class)
-          .stream()
-          .filter(psiDocToken -> !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag(psiDocToken))
+      PsiTreeUtil.findChildrenOfType(psiDocComment, PsiDocToken.class).stream()
+          .filter(JdcrPsiTreeUtils::isNotInsideCodeOrLiteralTag)
           .forEach(this::checkHtmlTagsAndEscapedChars);
 
-      PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class)
+      PsiTreeUtil.findChildrenOfType(psiDocComment, PsiInlineDocTag.class).stream()
+          .filter(JdcrPsiTreeUtils::isCompleteJavaDocTag)
           .forEach(this::checkInlineJavaDocTags);
     }
     /*
@@ -91,19 +92,17 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
     }
   }
 
+  /** Use only for <b>complete</b> DocTag */
   private void foldJavaDocTagStartEnd(@NotNull PsiInlineDocTag psiInlineDocTag) {
     // fold JavaDoc tag Start
-    JdcrPsiTreeUtils.excludeLineBreaks(
-            psiInlineDocTag,
-            new TextRange(
-                0, 2 /* `{@` */ + psiInlineDocTag.getName().length() + 1 /* space after */))
+    int tagStartLength = 2 /* `{@` */ + psiInlineDocTag.getName().length(); // `code`, `link` ...
+    if (tagStartLength != psiInlineDocTag.getLastChild().getStartOffsetInParent()) {
+      tagStartLength += 1; /* include space after tag name if any*/
+    }
+    JdcrPsiTreeUtils.excludeLineBreaks(psiInlineDocTag, new TextRange(0, tagStartLength))
         .forEach(range -> addFoldingDescriptor(psiInlineDocTag, range));
-    // fold JavaDoc tag End
-    addFoldingDescriptor(
-        psiInlineDocTag,
-        new TextRange(
-            psiInlineDocTag.getTextLength() - LENGTH_DOC_INLINE_TAG_END,
-            psiInlineDocTag.getTextLength()));
+    // fold JavaDoc tag End: `}`
+    addFoldingDescriptor(psiInlineDocTag.getLastChild(), new TextRange(0, 1));
   }
 
   /** Add FoldingDescriptors for HTML tags and Escaped Chars */
@@ -125,9 +124,7 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
 
     for (TextRange textRange : JdcrStringUtils.getHtmlEscapedChars(docTokenText)) {
       addFoldingDescriptor(
-          psiDocToken,
-          textRange,
-          Parser.unescapeEntities(textRange.substring(docTokenText), true));
+          psiDocToken, textRange, Parser.unescapeEntities(textRange.substring(docTokenText), true));
     }
   }
 

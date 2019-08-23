@@ -1,5 +1,9 @@
 package com.github.artsiomch.jdcr.utils;
 
+import static com.intellij.psi.JavaDocTokenType.DOC_INLINE_TAG_END;
+import static com.intellij.psi.JavaDocTokenType.DOC_INLINE_TAG_START;
+import static com.intellij.psi.JavaDocTokenType.DOC_TAG_NAME;
+
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -24,15 +28,21 @@ import org.jetbrains.annotations.Nullable;
 public class JdcrPsiTreeUtils {
 
   /**
-   * Check if PsiDocToken inside {@link JdcrStringUtils#CODE_TAGS} -> do not interpreting the text
+   * Check if PsiDocToken is not inside {@link JdcrStringUtils#CODE_TAGS} -> do not interpreting the text
    * as HTML markup
    */
-  public static boolean isInsideCodeOrLiteralTag(@NotNull PsiDocToken psiDocToken) {
+  public static boolean isNotInsideCodeOrLiteralTag(@NotNull PsiDocToken psiDocToken) {
     if (psiDocToken.getParent() instanceof PsiInlineDocTag) {
       String parentName = ((PsiInlineDocTag) psiDocToken.getParent()).getName();
-      return JdcrStringUtils.CODE_TAGS.contains(parentName);
+      return !JdcrStringUtils.CODE_TAGS.contains(parentName);
     }
-    return false;
+    return true;
+  }
+
+  public static boolean isCompleteJavaDocTag(PsiInlineDocTag psiInlineDocTag) {
+    assert psiInlineDocTag.getFirstChild().getNode().getElementType() == DOC_INLINE_TAG_START;
+    assert psiInlineDocTag.getFirstChild().getNextSibling().getNode().getElementType() == DOC_TAG_NAME;
+    return psiInlineDocTag.getLastChild().getNode().getElementType() == DOC_INLINE_TAG_END;
   }
 
   /** Check if {@code element} is JavaDoc element */

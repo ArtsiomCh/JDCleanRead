@@ -46,7 +46,7 @@ public class JdcrAnnotator implements Annotator {
 
     if (element instanceof PsiDocToken
         && ((PsiDocToken) element).getTokenType() == JavaDocTokenType.DOC_COMMENT_DATA
-        && !JdcrPsiTreeUtils.isInsideCodeOrLiteralTag((PsiDocToken) element)) {
+        && JdcrPsiTreeUtils.isNotInsideCodeOrLiteralTag((PsiDocToken) element)) {
 
       foundHtmlTags = JdcrStringUtils.getHtmlTags(element.getText());
       multiLineTagRangesInParent = JdcrPsiTreeUtils.getMultiLineTagRangesInParent(element);
@@ -81,7 +81,7 @@ public class JdcrAnnotator implements Annotator {
         annotateJavaDocTagStartEnd((PsiInlineDocTag) element);
       }
       if (tagName.equals("code")) { // @code
-        annotateCodeTagValue();
+        annotateDocTagValue((PsiInlineDocTag) element);
       }
     } else if (element instanceof PsiDocMethodOrFieldRef) { // @link @linkplain @value
       // fix {@link #to_method_call} is not highlighted:
@@ -101,7 +101,7 @@ public class JdcrAnnotator implements Annotator {
         tagStart.shiftRight(psiInlineDocTag.getTextRange().getStartOffset()),
         JdcrColorSettingsPage.BORDERED);
     // annotate JavaDoc tag End
-    if (psiInlineDocTag.getLastChild().getText().equals("}")) {
+    if (JdcrPsiTreeUtils.isCompleteJavaDocTag(psiInlineDocTag)) {
       doAnnotate(
           psiInlineDocTag.getLastChild().getTextRange() /* } */, JdcrColorSettingsPage.BORDERED);
     }
@@ -120,12 +120,16 @@ public class JdcrAnnotator implements Annotator {
     }
   }
 
-  private void annotateCodeTagValue() {
+  private void annotateDocTagValue(@NotNull PsiInlineDocTag psiInlineDocTag) {
+    final TextRange valueRange =
+        new TextRange(
+            2 /* {@ */ + psiInlineDocTag.getName().length(),
+            psiInlineDocTag.getTextLength()
+                - (JdcrPsiTreeUtils.isCompleteJavaDocTag(psiInlineDocTag) ? 1 /* } */ : 0));
     for (TextRange eachLineRange :
-        JdcrPsiTreeUtils.excludeLineBreaks(
-            element, new TextRange(6 /* {@code */, element.getTextLength() - 1 /* } */))) {
+        JdcrPsiTreeUtils.excludeLineBreaks(psiInlineDocTag, valueRange)) {
       doAnnotate(
-          eachLineRange.shiftRight(element.getTextRange().getStartOffset()),
+          eachLineRange.shiftRight(psiInlineDocTag.getTextRange().getStartOffset()),
           JdcrColorSettingsPage.CODE_TAG);
     }
   }
@@ -177,9 +181,8 @@ public class JdcrAnnotator implements Annotator {
     rangesToAnnotate.forEach(range -> doAnnotate(range, textAttributesKey));
   }
 
-  private <T> T getLast (@NotNull List<T> list) {
-    if (list.isEmpty())
-      throw new NoSuchElementException();
+  private <T> T getLast(@NotNull List<T> list) {
+    if (list.isEmpty()) throw new NoSuchElementException();
     return list.get(list.size() - 1);
   }
 
@@ -239,9 +242,8 @@ public class JdcrAnnotator implements Annotator {
             .collect(Collectors.toCollection(ArrayList::new));
   }
 
-  private <T> T getFirst (@NotNull List<T> list) {
-    if (list.isEmpty())
-      throw new NoSuchElementException();
+  private <T> T getFirst(@NotNull List<T> list) {
+    if (list.isEmpty()) throw new NoSuchElementException();
     return list.get(0);
   }
 
@@ -250,7 +252,7 @@ public class JdcrAnnotator implements Annotator {
   private void doAnnotate(
       @NotNull TextRange absoluteRange, @NotNull TextAttributesKey textAttributesKey) {
     Annotation annotation =
-      holder.createInfoAnnotation(absoluteRange, textAttributesKey.getExternalName());
+        holder.createInfoAnnotation(absoluteRange, textAttributesKey.getExternalName());
     annotation.setTooltip(null);
     annotation.setTextAttributes(textAttributesKey);
     /*
