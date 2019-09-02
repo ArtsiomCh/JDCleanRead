@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.github.ArtsiomCh.JDCleanRead</id>
   <name>JavaDoc Clean Read</name>
-  <version>192.0.dev1</version>
+  <version>192.1.dev8</version>
   <vendor email="achapialiou@gmail.com" url="http://github.com/ArtsiomCh/JDCleanRead">Artsiom Chapialiou</vendor>
 
   <product-descriptor code="PJDCLEANREAD" release-date="20190820" release-version="1921"/>
@@ -11,10 +11,15 @@
       <li> Hiding(folding) HTML tags;
       <li> Unescape HTML escaped chars;
       <li> Text styles for value of tags: &lt;code&gt; | &lt;tt&gt; | &lt;li&gt; | &lt;b&gt; | &lt;i&gt; | &lt;a href/name=...&gt; | @code | @literal | @link | @linkplain | @value;
-      <li> Tag and tag's value text styles are customisable at Settings -> Editor -> Color Scheme -> JavaDoc Clean Read.
+      <li> Tag and tag's value text styles are customisable at Settings -> Editor -> Color Scheme -> JavaDoc Clean Read. <br><br>
+
+     Plugin is <b>paid</b> for commercial IDEs: IntelliJ IDEA Ultimate. <br>
+     Plugin is <b>free</b>(for now) for community/free IDEs: IntelliJ IDEA Community, Android Studio. <br><br>
+
     ]]></description>
 
   <change-notes><![CDATA[
+            192.1.1 - Fix issue with <a href="https://github.com/ArtsiomCh/JDCleanRead/issues/2">uncompleted JavaDoc tag</a> <br>
             0.3.1 - Make new functionality (see 0.3.0) available since 181.0 instead of 183.0 <br>
             0.3.0 - Multi-line Html/Javadoc tag and tag's value support added (all possible cases founded). Also added/fixed: <br>
                 &emsp; - Annotate Html/Javadoc tag and Html Escaped chars (with Bordering effect by default - customisable). <br>
@@ -40,7 +45,7 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="191.0"/>
+  <idea-version since-build="191.0" until-build="192.*"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->

@@ -41,6 +41,7 @@ public class JdcrAnnotator implements Annotator {
 
   @Override
   public void annotate(@NotNull PsiElement element, @NotNull AnnotationHolder holder) {
+    if (!CheckLicense.enabled) return;
     this.holder = holder;
     this.element = element;
 

@@ -10,7 +10,6 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.JavaDocElementType;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocToken;
@@ -28,10 +27,12 @@ public class JdcrFoldingBuilder implements FoldingBuilder {
   private Deque<FoldingDescriptor> foldingDescriptors;
   private FoldingGroup foldingGroup;
   private static final int LENGTH_DOC_INLINE_TAG_END = 1; // }
+  private static final FoldingDescriptor[] EMPTY_ARRAY = {};
 
   @NotNull
   @Override
   public FoldingDescriptor[] buildFoldRegions(@NotNull ASTNode node, @NotNull Document document) {
+    if (!CheckLicense.enabled) return EMPTY_ARRAY;
     PsiElement root = node.getPsi();
     foldingDescriptors = new ArrayDeque<>();
 
