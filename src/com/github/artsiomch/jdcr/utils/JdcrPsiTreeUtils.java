@@ -28,8 +28,8 @@ import org.jetbrains.annotations.Nullable;
 public class JdcrPsiTreeUtils {
 
   /**
-   * Check if PsiDocToken is not inside {@link JdcrStringUtils#CODE_TAGS} -> do not interpreting the text
-   * as HTML markup
+   * Check if PsiDocToken is not inside {@link JdcrStringUtils#CODE_TAGS} -> do not interpreting the
+   * text as HTML markup
    */
   public static boolean isNotInsideCodeOrLiteralTag(@NotNull PsiDocToken psiDocToken) {
     if (psiDocToken.getParent() instanceof PsiInlineDocTag) {
@@ -40,9 +40,10 @@ public class JdcrPsiTreeUtils {
   }
 
   public static boolean isCompleteJavaDocTag(PsiInlineDocTag psiInlineDocTag) {
-    assert psiInlineDocTag.getFirstChild().getNode().getElementType() == DOC_INLINE_TAG_START;
-    assert psiInlineDocTag.getFirstChild().getNextSibling().getNode().getElementType() == DOC_TAG_NAME;
-    return psiInlineDocTag.getLastChild().getNode().getElementType() == DOC_INLINE_TAG_END;
+    return psiInlineDocTag.getFirstChild().getNode().getElementType() == DOC_INLINE_TAG_START
+        && psiInlineDocTag.getFirstChild().getNextSibling().getNode().getElementType()
+            == DOC_TAG_NAME
+        && psiInlineDocTag.getLastChild().getNode().getElementType() == DOC_INLINE_TAG_END;
   }
 
   /** Check if {@code element} is JavaDoc element */
@@ -108,12 +109,12 @@ public class JdcrPsiTreeUtils {
           prevLineBreak = la.getStartOffsetInParent() + la.getTextLength() /*length of '*'s */;
         } else if (child instanceof PsiDocTag) {
           // break nested elements
-/*
-          Deque<TextRange> subElementRanges =
-              excludeLineBreaks(child, new TextRange(0, child.getTextLength())).stream()
-                  .map(nestedRange -> nestedRange.shiftRight(child.getStartOffsetInParent()))
-                  .collect(Collectors.toCollection(ArrayDeque::new));
-*/
+          /*
+                    Deque<TextRange> subElementRanges =
+                        excludeLineBreaks(child, new TextRange(0, child.getTextLength())).stream()
+                            .map(nestedRange -> nestedRange.shiftRight(child.getStartOffsetInParent()))
+                            .collect(Collectors.toCollection(ArrayDeque::new));
+          */
           final List<TextRange> nestedRanges =
               excludeLineBreaks(child, new TextRange(0, child.getTextLength()));
           Deque<TextRange> subElementRanges = new ArrayDeque<>(nestedRanges.size());

@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.github.ArtsiomCh.JDCleanRead</id>
   <name>JavaDoc Clean Read</name>
-  <version>192.1.1</version>
+  <version>193.1.1</version>
   <vendor email="achapialiou@gmail.com" url="http://github.com/ArtsiomCh/JDCleanRead">Artsiom Chapialiou</vendor>
 
   <product-descriptor code="PJDCLEANREAD" release-date="20190820" release-version="1921"/>
@@ -19,6 +19,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
+            193.1.1 - Fix another issue with uncompleted JavaDoc tag; EAP builds support fixed. <br>
             192.1.1 - Fix issue with <a href="https://github.com/ArtsiomCh/JDCleanRead/issues/2">uncompleted JavaDoc tag</a> <br>
             0.3.1 - Make new functionality (see 0.3.0) available since 181.0 instead of 183.0 <br>
             0.3.0 - Multi-line Html/Javadoc tag and tag's value support added (all possible cases founded). Also added/fixed: <br>
@@ -45,7 +46,7 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="191.0" until-build="192.*"/>
+  <idea-version since-build="191.0" until-build="193.*"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
