@@ -2,6 +2,7 @@ package com.github.artsiomch.jdcr;
 
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PermanentInstallationID;
 import com.intellij.ui.LicensingFacade;
 import org.jetbrains.annotations.NotNull;
@@ -101,12 +102,7 @@ class CheckLicense {
   static final boolean enabled = myIsLicensed();
 
   private static boolean myIsLicensed() {
-    final boolean enabled = isLicensed();
-/*
-      ApplicationManager.getApplication().isEAP()
-          || !PlatformUtils.isIdeaUltimate()
-          || isLicensed();
-*/
+    final boolean enabled = ApplicationManager.getApplication().isEAP() || isLicensed();
     if (!enabled) {
       final String message =
           "JavaDoc Clean Read plugin License not found. Plugin functionality will be disabled.";
